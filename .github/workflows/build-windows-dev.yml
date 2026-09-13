@@ -39,7 +39,7 @@ jobs:
         run: pnpm prepare:packaging
 
       - name: Build unsigned Windows executable
-        run: pnpm tauri build --bundles nsis
+        run: pnpm tauri build --bundles nsis --no-sign
         env:
           VITE_OVRLEY_VERSION: dev-${{ github.run_number }}
 
