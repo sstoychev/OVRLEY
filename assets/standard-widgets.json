@@ -13,6 +13,12 @@
     "shortNameKey": "widgets.types.time.shortName",
     "category": "general"
   },
+  "elapsed_time": {
+    "type": "elapsed_time",
+    "nameKey": "widgets.types.elapsed_time.name",
+    "shortNameKey": "widgets.types.elapsed_time.shortName",
+    "category": "general"
+  },
   "plot": {
     "definitions": {
       "course": {

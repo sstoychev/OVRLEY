@@ -20,8 +20,11 @@ pub(crate) use icons::metric_icon_kind_for_value;
 
 use crate::activity::schema::DenseActivityReport;
 use crate::error::CoreResult;
-use crate::normalize::{ValidatedGradientWidget, ValidatedTimeValue, ValidatedValueWidget};
-use crate::render::format::{format_metric_presentation_parts, format_validated_time_parts};
+use crate::normalize::{ValidatedElapsedTimeValue, ValidatedGradientWidget, ValidatedTimeValue, ValidatedValueWidget};
+use crate::render::format::{
+    format_metric_presentation_parts, format_validated_elapsed_time_parts,
+    format_validated_time_parts,
+};
 use crate::render::text::ResolvedTextStyle;
 use crate::standard_metrics::{display_type_layout_mode, DisplayTypeLayoutMode};
 use crate::types::{DisplayType, MetricKind};
@@ -64,6 +67,15 @@ pub(crate) struct MetricWidgetRequest<'a> {
     /// Pre-validated time widget. When present, the validated path is used
     /// instead of reading from legacy raw `ValueConfig`.
     pub validated_time: Option<&'a ValidatedTimeValue>,
+    /// Pre-validated elapsed-time widget. When present, the validated path is
+    /// used instead of reading from legacy raw `ValueConfig`.
+    pub validated_elapsed_time: Option<&'a ValidatedElapsedTimeValue>,
+    /// This render scene's absolute offset into the full source activity, in
+    /// seconds. Only consumed by the elapsed-time widget.
+    pub scene_start_offset_seconds: f64,
+    /// Full source-activity duration in seconds. Only consumed by the
+    /// elapsed-time widget.
+    pub full_activity_duration_seconds: f64,
     pub altitude_offset_m: f64,
     pub timezone: Option<Tz>,
 }
@@ -117,6 +129,29 @@ pub(crate) fn draw_metric_value_widget_with_config(
             request.font_dirs,
             request.static_parts,
             &validated_time.base,
+        )?;
+        return Ok(true);
+    }
+
+    if request.metric_kind == MetricKind::ElapsedTime {
+        let validated_elapsed_time = request
+            .validated_elapsed_time
+            .expect("elapsed time widget must be validated before rendering");
+        let parts = format_validated_elapsed_time_parts(
+            validated_elapsed_time,
+            request.dense_activity,
+            request.frame_index,
+            request.scene_start_offset_seconds,
+            request.full_activity_duration_seconds,
+        );
+        draw_metric_parts(
+            request.canvas,
+            request.base_style,
+            &parts,
+            request.scale,
+            request.font_dirs,
+            request.static_parts,
+            &validated_elapsed_time.base,
         )?;
         return Ok(true);
     }
@@ -266,6 +301,9 @@ mod tests {
                     validated: None,
                     validated_gradient: None,
                     validated_time: None,
+                    validated_elapsed_time: None,
+                    scene_start_offset_seconds: 0.0,
+                    full_activity_duration_seconds: 0.0,
                     altitude_offset_m: 0.0,
                     timezone: None,
                 })
@@ -394,6 +432,9 @@ mod tests {
                 validated: Some(&validated),
                 validated_gradient: None,
                 validated_time: None,
+                validated_elapsed_time: None,
+                scene_start_offset_seconds: 0.0,
+                full_activity_duration_seconds: 0.0,
                 altitude_offset_m: 0.0,
                 timezone: None,
             })
@@ -422,6 +463,9 @@ mod tests {
                 validated: Some(&validated),
                 validated_gradient: None,
                 validated_time: None,
+                validated_elapsed_time: None,
+                scene_start_offset_seconds: 0.0,
+                full_activity_duration_seconds: 0.0,
                 altitude_offset_m: 0.0,
                 timezone: None,
             })

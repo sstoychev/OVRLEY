@@ -7,6 +7,7 @@
 mod arc_gauge;
 mod backdrop;
 mod bar_geometry;
+mod elapsed_time;
 mod elevation;
 mod g_force;
 mod gradient;
@@ -48,6 +49,7 @@ pub(crate) use bar_geometry::{
     arc_track_radius, corner_track_cap_padding, corner_track_radius, resolve_bar_style_geometry,
     scale_bar_geometry, track_corner_radius_max,
 };
+pub use elapsed_time::{validate_elapsed_time_value, ElapsedTimeFormat, ValidatedElapsedTimeValue};
 pub use elevation::{validate_elevation_plot, ValidatedElevationPlot};
 pub use g_force::{validate_g_force, GForceAxis, ValidatedGForceWidget};
 pub use gradient::{validate_gradient_widget, ValidatedGradientWidget};
@@ -192,6 +194,9 @@ pub fn validate_render_config(raw: RenderConfig) -> CoreResult<ValidatedRenderCo
             }
             if value.value == MetricKind::Time && value.display_type == DisplayType::Text {
                 return validate_time_value(value, idx).map(PreparedValue::TimeText);
+            }
+            if value.value == MetricKind::ElapsedTime && value.display_type == DisplayType::Text {
+                return validate_elapsed_time_value(value, idx).map(PreparedValue::ElapsedTime);
             }
             if value.display_type == DisplayType::Linear {
                 let value = value.with_promoted_display_variant("linear")?;
@@ -371,6 +376,7 @@ impl ValidatedRenderConfig {
                 MetricKind::CoreTemperature => requirements.core_temperature = true,
                 MetricKind::Heading => requirements.heading = true,
                 MetricKind::Time => requirements.time = true,
+                MetricKind::ElapsedTime => {}
                 MetricKind::Calories => requirements.calories = true,
                 MetricKind::LapTimer => unreachable!("lap_timer must use dedicated validation"),
             }

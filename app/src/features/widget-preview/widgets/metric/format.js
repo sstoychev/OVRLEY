@@ -414,6 +414,51 @@ export function formatTimeValue(format, timestamp, timezone) {
 }
 
 /**
+ * Formats a duration in seconds as a zero-padded `HH:MM:SS` string.
+ *
+ * @param {number} totalSeconds - Duration in seconds. Negative input clamps to zero.
+ * @returns {string} Zero-padded `HH:MM:SS` string.
+ */
+function formatElapsedTimeHms(totalSeconds) {
+  const safeSeconds = Math.max(Math.round(totalSeconds), 0)
+  const hours = Math.floor(safeSeconds / 3600)
+  const minutes = Math.floor((safeSeconds % 3600) / 60)
+  const seconds = safeSeconds % 60
+  return [hours, minutes, seconds].map(padNumber).join(':')
+}
+
+/**
+ * Formats an elapsed/remaining activity-time widget value.
+ *
+ * `elapsedSeconds` and `totalSeconds` are both relative to the full source
+ * activity, never to the video clip currently being edited — a multi-clip
+ * activity therefore reports one consistent timeline across every clip.
+ *
+ * @param {string} format - One of `elapsed`, `remaining`, `elapsed_total`, `elapsed_remaining`.
+ * @param {number} elapsedSeconds - Absolute activity-relative elapsed seconds.
+ * @param {number} totalSeconds - Full source activity duration in seconds.
+ * @returns {string} Formatted elapsed-time display text.
+ */
+export function formatElapsedTimeValue(format, elapsedSeconds, totalSeconds) {
+  const elapsed = formatElapsedTimeHms(elapsedSeconds)
+  const remaining = formatElapsedTimeHms(totalSeconds - elapsedSeconds)
+  const total = formatElapsedTimeHms(totalSeconds)
+
+  switch (format) {
+    case 'elapsed':
+      return elapsed
+    case 'remaining':
+      return `-${remaining}`
+    case 'elapsed_total':
+      return `${elapsed}/${total}`
+    case 'elapsed_remaining':
+      return `${elapsed}/-${remaining}`
+    default:
+      throw new Error(`Unknown elapsed time format: ${format}`)
+  }
+}
+
+/**
  * Formats a gradient value as a signed percentage string.
  *
  * @param {object} widget - Widget configuration containing decimal precision and sign display settings.

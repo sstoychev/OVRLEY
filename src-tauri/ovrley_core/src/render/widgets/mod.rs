@@ -113,6 +113,8 @@ pub fn prepare_render_assets(
         route_cache: None,
         elevation_cache: None,
         base_rgba: None,
+        full_activity_duration_seconds: activity.trim_end_seconds,
+        scene_start_offset_seconds: config.scene.start,
     };
 
     if let Some(validated) = &config.course_plot {

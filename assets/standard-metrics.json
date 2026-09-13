@@ -28,6 +28,7 @@
         },
         "fontSizeByType": {
           "time": 72,
+          "elapsed_time": 72,
           "gradient": 96,
           "heading": 100,
           "default": 100
@@ -36,6 +37,9 @@
           "time": {
             "format": "time-24",
             "hours_offset": 0
+          },
+          "elapsed_time": {
+            "format": "elapsed"
           },
           "distance": {
             "decimals": 1,

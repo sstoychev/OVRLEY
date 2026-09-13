@@ -7,9 +7,10 @@
 
 use crate::activity::schema::DenseActivityReport;
 use crate::normalize::{
-    ValidatedGradientWidget, ValidatedTimeFormatting, ValidatedTimeValue, ValidatedValueFormatting,
-    ValidatedValueWidget,
+    ValidatedElapsedTimeValue, ValidatedGradientWidget, ValidatedTimeFormatting,
+    ValidatedTimeValue, ValidatedValueFormatting, ValidatedValueWidget,
 };
+use crate::normalize::ElapsedTimeFormat;
 use crate::standard_metrics::{
     standard_metric_formatter, standard_metric_interpolation, standard_metric_unit_label,
     StandardMetricFormatterKind, StandardMetricInterpolationKind,
@@ -329,6 +330,71 @@ pub fn format_validated_time_parts(
         icon_kind: super::widgets::value::metric_icon_kind_for_value(MetricKind::Time),
     }
 }
+
+/// Formats an `H:MM:SS` duration string, clamping negative input to zero.
+fn format_hms(total_seconds: f64) -> String {
+    let total = total_seconds.max(0.0).round() as i64;
+    let hours = total / 3600;
+    let minutes = (total % 3600) / 60;
+    let seconds = total % 60;
+    format!("{hours:02}:{minutes:02}:{seconds:02}")
+}
+
+/// Formats an elapsed/remaining activity-time widget value using the
+/// validated contract.
+///
+/// `scene_start_offset_seconds` is this render scene's absolute offset into
+/// the full source activity (non-zero for a later clip of a multi-clip
+/// activity); `full_activity_duration_seconds` is the full activity's total
+/// duration, independent of the current clip. Both are resolved once per
+/// render and shared by every elapsed-time widget so a multi-clip activity
+/// reports one consistent timeline across every exported video file.
+pub fn format_validated_elapsed_time_parts(
+    validated: &ValidatedElapsedTimeValue,
+    dense_activity: &DenseActivityReport,
+    frame_index: usize,
+    scene_start_offset_seconds: f64,
+    full_activity_duration_seconds: f64,
+) -> MetricDisplayParts {
+    let local_elapsed = dense_activity
+        .frame_elapsed_seconds
+        .get(frame_index)
+        .copied()
+        .unwrap_or(0.0);
+    let elapsed_seconds = (scene_start_offset_seconds + local_elapsed).max(0.0);
+    let remaining_seconds = (full_activity_duration_seconds - elapsed_seconds).max(0.0);
+
+    let mut value_text = match validated.format {
+        ElapsedTimeFormat::Elapsed => format_hms(elapsed_seconds),
+        ElapsedTimeFormat::Remaining => format!("-{}", format_hms(remaining_seconds)),
+        ElapsedTimeFormat::ElapsedOverTotal => format!(
+            "{}/{}",
+            format_hms(elapsed_seconds),
+            format_hms(full_activity_duration_seconds)
+        ),
+        ElapsedTimeFormat::ElapsedOverRemaining => format!(
+            "{}/-{}",
+            format_hms(elapsed_seconds),
+            format_hms(remaining_seconds)
+        ),
+    };
+    if !validated.base.prefix.is_empty() {
+        value_text = format!("{}{value_text}", validated.base.prefix);
+    }
+    if !validated.base.suffix.is_empty() {
+        value_text.push_str(&validated.base.suffix);
+    }
+
+    MetricDisplayParts {
+        content: MetricDisplayContent::Standard {
+            value_text,
+            unit_text: None,
+        },
+        show_icon: validated.base.show_icon,
+        icon_kind: super::widgets::value::metric_icon_kind_for_value(MetricKind::ElapsedTime),
+    }
+}
+
 
 fn format_validated_standard_metric_parts<'a>(
     validated: &ValidatedValueWidget,

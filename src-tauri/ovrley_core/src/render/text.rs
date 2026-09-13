@@ -6,8 +6,8 @@
 
 use crate::error::{CoreError, CoreResult};
 use crate::normalize::{
-    ValidatedGradientWidget, ValidatedLabel, ValidatedLapTimer, ValidatedSceneConfig,
-    ValidatedTimeValue, ValidatedValueWidget,
+    ValidatedElapsedTimeValue, ValidatedGradientWidget, ValidatedLabel, ValidatedLapTimer,
+    ValidatedSceneConfig, ValidatedTimeValue, ValidatedValueWidget,
 };
 use skia_safe::{
     image_filters,
@@ -149,6 +149,15 @@ pub fn validated_value_style(
 /// Shadow and border come from scene config (not part of the time contract).
 pub fn validated_time_style(
     validated: &ValidatedTimeValue,
+    scene: &ValidatedSceneConfig,
+    scale: f32,
+) -> ResolvedTextStyle {
+    validated_value_style(&validated.base, scene, scale)
+}
+
+/// Resolves a text style from a validated elapsed-time widget and scene config.
+pub fn validated_elapsed_time_style(
+    validated: &ValidatedElapsedTimeValue,
     scene: &ValidatedSceneConfig,
     scale: f32,
 ) -> ResolvedTextStyle {

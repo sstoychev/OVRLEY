@@ -15,7 +15,7 @@
  * @returns {object|null} Preview model with metricLayout, visualBounds, and text values, or null for non-value or boxed widgets.
  */
 
-import { formatStandardMetricDisplay, formatTimeValue } from './format'
+import { formatStandardMetricDisplay, formatTimeValue, formatElapsedTimeValue } from './format'
 import {
   getMetricWidgetLayout,
   getMetricWidgetVisualBounds,
@@ -299,6 +299,8 @@ export function buildMetricWidgetPreviewModel({ widget, activity, previewSecond,
     unitText = formatted.units
   } else if (widget.type === 'time') {
     valueText = formatTimeValue(widget.data.format, getInterpolatedTimeValue(displayActivity, previewSecond), displayActivity?.metadata?.timezone)
+  } else if (widget.type === 'elapsed_time') {
+    valueText = formatElapsedTimeValue(widget.data.format, previewSecond, activity?.trim_end_seconds ?? 0)
   } else {
     throw new Error(`Cannot build intrinsic metric preview for widget type: ${widget.type}`)
   }

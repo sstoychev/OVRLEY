@@ -108,6 +108,7 @@ export const METRIC_ICON_SVGS = {
   stroke_rate: parseMetricIconSvg(strokeRateIconSvg),
   temperature: parseMetricIconSvg(temperatureIconSvg),
   time: parseMetricIconSvg(timeIconSvg),
+  elapsed_time: parseMetricIconSvg(timeIconSvg),
   torque: parseMetricIconSvg(torqueIconSvg),
   vertical_oscillation: parseMetricIconSvg(verticalOscillationIconSvg),
   vertical_ratio: parseMetricIconSvg(verticalRatioIconSvg),

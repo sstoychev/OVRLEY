@@ -293,6 +293,7 @@ fn metric_kind_from_key(key: &str) -> Option<MetricKind> {
         "total_ascent" => Some(MetricKind::TotalAscent),
         "calories" => Some(MetricKind::Calories),
         "lap_timer" => Some(MetricKind::LapTimer),
+        "elapsed_time" => Some(MetricKind::ElapsedTime),
         _ => None,
     }
 }
@@ -340,6 +341,7 @@ fn metric_kind_to_key(kind: MetricKind) -> &'static str {
         MetricKind::TotalAscent => "total_ascent",
         MetricKind::Calories => "calories",
         MetricKind::LapTimer => "lap_timer",
+        MetricKind::ElapsedTime => "elapsed_time",
     }
 }
 
@@ -377,6 +379,9 @@ pub fn standard_metric_units_mode(kind: MetricKind) -> Option<StandardMetricUnit
 
 pub fn metric_icon_asset_key(kind: MetricKind) -> Option<MetricIconAssetKey> {
     if kind == MetricKind::Time {
+        return Some(MetricIconAssetKey::Time);
+    }
+    if kind == MetricKind::ElapsedTime {
         return Some(MetricIconAssetKey::Time);
     }
 

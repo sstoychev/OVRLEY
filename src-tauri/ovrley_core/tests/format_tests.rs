@@ -12,8 +12,52 @@ use serde_json::json;
 use ovrley_core::activity::schema::{DenseActivityReport, DenseSeriesReport};
 use ovrley_core::normalize::ValidatedValueWidget;
 use ovrley_core::render::format::{
-    format_time_key, format_validated_metric_parts, MetricDisplayContent, MetricIconKind,
+    format_time_key, format_validated_elapsed_time_parts, format_validated_metric_parts,
+    MetricDisplayContent, MetricIconKind,
 };
+use ovrley_core::render::widgets::types::PreparedValue;
+
+#[test]
+fn formats_elapsed_time_variants_using_full_activity_duration_and_scene_offset() {
+    let mut elapsed_time = common::builders::speed_value_json();
+    elapsed_time["value"] = json!("elapsed_time");
+    elapsed_time["show_units"] = json!(false);
+    elapsed_time["display_unit"] = json!("");
+    elapsed_time["format"] = json!("elapsed");
+
+    let config = common::seam::validated_config_from_value(json!({
+        "scene": common::seam::explicit_scene_json(),
+        "labels": [],
+        "values": [elapsed_time],
+        "plots": []
+    }));
+    let validated = match config.values.into_iter().next().unwrap() {
+        PreparedValue::ElapsedTime(value) => value,
+        other => panic!("expected elapsed time value, got {other:?}"),
+    };
+
+    let dense = dense_report_with(|_| {});
+
+    // A clip starting 1800s into a 3600s activity: elapsed should read the
+    // absolute activity position, not the clip-local position.
+    let parts = format_validated_elapsed_time_parts(&validated, &dense, 0, 1800.0, 3600.0);
+    assert_eq!(parts.standard_text().0, "00:30:00");
+
+    let mut remaining = validated.clone();
+    remaining.format = ovrley_core::normalize::ElapsedTimeFormat::Remaining;
+    let parts = format_validated_elapsed_time_parts(&remaining, &dense, 0, 1800.0, 3600.0);
+    assert_eq!(parts.standard_text().0, "-00:30:00");
+
+    let mut elapsed_total = validated.clone();
+    elapsed_total.format = ovrley_core::normalize::ElapsedTimeFormat::ElapsedOverTotal;
+    let parts = format_validated_elapsed_time_parts(&elapsed_total, &dense, 0, 1800.0, 3600.0);
+    assert_eq!(parts.standard_text().0, "00:30:00/01:00:00");
+
+    let mut elapsed_remaining = validated.clone();
+    elapsed_remaining.format = ovrley_core::normalize::ElapsedTimeFormat::ElapsedOverRemaining;
+    let parts = format_validated_elapsed_time_parts(&elapsed_remaining, &dense, 0, 1800.0, 3600.0);
+    assert_eq!(parts.standard_text().0, "00:30:00/-00:30:00");
+}
 
 #[test]
 fn formats_time_key_variants() {

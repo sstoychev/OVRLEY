@@ -39,6 +39,13 @@ export const TIME_FORMATS = [
   { value: 'date-mmmm-time-12', labelKey: 'widget-editor.dateTimeFormatDdMmmm12h', defaultLabel: 'Date + time (DD MMMM, 12h)' },
 ]
 
+export const ELAPSED_TIME_FORMATS = [
+  { value: 'elapsed', labelKey: 'widget-editor.elapsedTimeFormatElapsed', defaultLabel: 'Elapsed' },
+  { value: 'remaining', labelKey: 'widget-editor.elapsedTimeFormatRemaining', defaultLabel: 'Remaining' },
+  { value: 'elapsed_total', labelKey: 'widget-editor.elapsedTimeFormatElapsedTotal', defaultLabel: 'Elapsed / Total' },
+  { value: 'elapsed_remaining', labelKey: 'widget-editor.elapsedTimeFormatElapsedRemaining', defaultLabel: 'Elapsed / Remaining' },
+]
+
 export const SPEED_UNITS = [
   { value: 'kmh', label: 'km/h' },
   { value: 'mph', label: 'mph' },

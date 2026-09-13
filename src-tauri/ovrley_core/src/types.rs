@@ -34,6 +34,8 @@ pub enum MetricKind {
     Elevation,
     #[serde(rename = "time")]
     Time,
+    #[serde(rename = "elapsed_time")]
+    ElapsedTime,
     #[serde(rename = "gradient")]
     Gradient,
     #[serde(rename = "cadence")]

@@ -753,6 +753,7 @@ impl DenseSeriesReport {
             MetricKind::GearPosition
             | MetricKind::GpsCoordinates
             | MetricKind::Time
+            | MetricKind::ElapsedTime
             | MetricKind::LapTimer => None,
         }
     }

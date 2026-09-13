@@ -79,6 +79,7 @@ pub fn draw_metric_presentation(
         ),
         PreparedValue::StandardText(_)
         | PreparedValue::TimeText(_)
+        | PreparedValue::ElapsedTime(_)
         | PreparedValue::Gradient(_)
         | PreparedValue::LapTimer(_) => None,
     }

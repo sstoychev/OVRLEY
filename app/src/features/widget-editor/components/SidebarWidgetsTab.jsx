@@ -11,6 +11,7 @@ import { isStandardMetricWidgetType } from '@/lib/widget/standard-metrics'
 import { useWidgetManager } from '../hooks/useWidgetManager'
 import { PositionSection } from './widgetEditorSections'
 import BackdropWidgetEditor from './BackdropWidgetEditor'
+import ElapsedTimeWidgetEditor from './ElapsedTimeWidgetEditor'
 import ElevationWidgetEditor from './ElevationWidgetEditor'
 import GradientWidgetEditor from './GradientWidgetEditor'
 import MetricWidgetEditor from './metricWidget/MetricWidgetEditor'
@@ -33,6 +34,7 @@ const WIDGET_EDITOR_MAP = {
   backdrop: BackdropWidgetEditor,
   label: TextWidgetEditor,
   time: TimeWidgetEditor,
+  elapsed_time: ElapsedTimeWidgetEditor,
   gradient: GradientWidgetEditor,
   course: RouteMapWidgetEditor,
   elevation: ElevationWidgetEditor,

@@ -28,7 +28,7 @@ use crate::render::static_layer::{cached_labels_image, config_has_static_metric_
 use crate::render::surface::{create_surface, wrap_native_surface, write_surface_png};
 use crate::render::text::{
     validated_gradient_style, validated_lap_timer_style, validated_time_style,
-    validated_value_style,
+    validated_elapsed_time_style, validated_value_style,
 };
 use crate::render::widgets::types::PreparedValue;
 use crate::render::widgets::value::MetricWidgetRequest;
@@ -588,6 +588,9 @@ fn render_frame_to_surface(
                         validated: Some(validated),
                         validated_gradient: None,
                         validated_time: None,
+                        validated_elapsed_time: None,
+                        scene_start_offset_seconds: 0.0,
+                        full_activity_duration_seconds: 0.0,
                         altitude_offset_m: prepared.altitude_offset_m,
                         timezone: None,
                     })?;
@@ -612,8 +615,38 @@ fn render_frame_to_surface(
                         validated: None,
                         validated_gradient: None,
                         validated_time: Some(validated),
+                        validated_elapsed_time: None,
+                        scene_start_offset_seconds: 0.0,
+                        full_activity_duration_seconds: 0.0,
                         altitude_offset_m: 0.0,
                         timezone: prepared_assets.timezone,
+                    })?;
+                }
+                PreparedValue::ElapsedTime(validated) => {
+                    let style = validated_elapsed_time_style(validated, &prepared_assets.scene, scale);
+                    let static_parts = if static_metric_parts_rendered {
+                        static_metric_parts_for_value(&validated.base)
+                    } else {
+                        StaticMetricParts::default()
+                    };
+                    draw_metric_value_widget_with_config(MetricWidgetRequest {
+                        canvas,
+                        metric_kind: crate::MetricKind::ElapsedTime,
+                        display_type: crate::DisplayType::Text,
+                        base_style: &style,
+                        dense_activity,
+                        frame_index,
+                        scale,
+                        font_dirs: &paths.font_dirs,
+                        static_parts,
+                        validated: None,
+                        validated_gradient: None,
+                        validated_time: None,
+                        validated_elapsed_time: Some(validated),
+                        scene_start_offset_seconds: prepared_assets.scene_start_offset_seconds,
+                        full_activity_duration_seconds: prepared_assets.full_activity_duration_seconds,
+                        altitude_offset_m: 0.0,
+                        timezone: None,
                     })?;
                 }
                 PreparedValue::Gradient(validated) => {
@@ -631,6 +664,9 @@ fn render_frame_to_surface(
                         validated: None,
                         validated_gradient: Some(validated),
                         validated_time: None,
+                        validated_elapsed_time: None,
+                        scene_start_offset_seconds: 0.0,
+                        full_activity_duration_seconds: 0.0,
                         altitude_offset_m: 0.0,
                         timezone: None,
                     })?;

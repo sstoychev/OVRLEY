@@ -251,6 +251,68 @@ fn time_uses_the_same_text_alignment_contract() {
 }
 
 #[test]
+fn elapsed_time_uses_the_same_text_alignment_contract() {
+    let mut elapsed_time = common::builders::speed_value_json();
+    elapsed_time["value"] = json!("elapsed_time");
+    elapsed_time["content_alignment"] = json!("center");
+    elapsed_time["show_units"] = json!(false);
+    elapsed_time["display_unit"] = json!("");
+    elapsed_time["format"] = json!("elapsed");
+
+    let config = common::seam::validated_config_from_value(json!({
+        "scene": common::seam::explicit_scene_json(),
+        "labels": [],
+        "values": [elapsed_time],
+        "plots": []
+    }));
+    match config.values.into_iter().next().unwrap() {
+        PreparedValue::ElapsedTime(value) => {
+            assert_eq!(value.base.content_alignment, ContentAlignment::Center)
+        }
+        other => panic!("expected elapsed time value, got {other:?}"),
+    }
+}
+
+#[test]
+fn elapsed_time_rejects_missing_or_unknown_format() {
+    let mut elapsed_time = common::builders::speed_value_json();
+    elapsed_time["value"] = json!("elapsed_time");
+    elapsed_time["show_units"] = json!(false);
+    elapsed_time["display_unit"] = json!("");
+    elapsed_time["format"] = json!("elapsed");
+    elapsed_time.as_object_mut().unwrap().remove("format");
+
+    let result = ovrley_core::commands::validate_config_value(&json!({
+        "scene": common::seam::explicit_scene_json(),
+        "labels": [],
+        "values": [elapsed_time],
+        "plots": []
+    }));
+    let error = match result {
+        Ok(_) => panic!("missing format should fail validation"),
+        Err(error) => error,
+    };
+    assert!(error.to_string().contains("format"));
+
+    let mut elapsed_time = common::builders::speed_value_json();
+    elapsed_time["value"] = json!("elapsed_time");
+    elapsed_time["show_units"] = json!(false);
+    elapsed_time["display_unit"] = json!("");
+    elapsed_time["format"] = json!("bogus");
+    let result = ovrley_core::commands::validate_config_value(&json!({
+        "scene": common::seam::explicit_scene_json(),
+        "labels": [],
+        "values": [elapsed_time],
+        "plots": []
+    }));
+    let error = match result {
+        Ok(_) => panic!("unknown elapsed time format should fail validation"),
+        Err(error) => error,
+    };
+    assert!(error.to_string().contains("unknown elapsed time format"));
+}
+
+#[test]
 fn time_requires_canonical_offset_and_format_fields() {
     for missing_field in ["hours_offset", "format"] {
         let mut time = common::builders::speed_value_json();

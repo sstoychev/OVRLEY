@@ -137,7 +137,7 @@ export function useWidgetManager({ widgetLiveEdits }) {
       if (!nextConfig.labels) nextConfig.labels = []
       nextConfig.labels.push(createLabelDefaults(globalDefaults))
       targetCategory = 'labels'
-    } else if (isStandardMetricWidgetType(type) || ['gradient', 'time'].includes(type)) {
+    } else if (isStandardMetricWidgetType(type) || ['gradient', 'time', 'elapsed_time'].includes(type)) {
       if (!nextConfig.values) nextConfig.values = []
       nextConfig.values.push(
         createMetricValueDefaults(type, globalDefaults, {

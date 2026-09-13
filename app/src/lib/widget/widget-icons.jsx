@@ -119,7 +119,16 @@ export function getWidgetDisplayTypes(type) {
   return ['text']
 }
 
-export const QUICKMENU_ITEMS = ['label', 'time', 'elevation', 'course', 'gradient', 'backdrop', ...CURRENT_STANDARD_METRIC_WIDGET_TYPES]
+export const QUICKMENU_ITEMS = [
+  'label',
+  'time',
+  'elapsed_time',
+  'elevation',
+  'course',
+  'gradient',
+  'backdrop',
+  ...CURRENT_STANDARD_METRIC_WIDGET_TYPES,
+]
   .filter((type) => type !== 'lap_timer')
   .map((type) => ({
     type,

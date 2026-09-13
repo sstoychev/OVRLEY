@@ -6,10 +6,10 @@
 //! place.
 
 use crate::normalize::{
-    ResolvedBarGeometry, ValidatedArcGaugeWidget, ValidatedBackdrop, ValidatedGForceWidget,
-    ValidatedGradientWidget, ValidatedHeading, ValidatedLabel, ValidatedLapTimer,
-    ValidatedLeanAngleWidget, ValidatedLinearGaugeOrientation, ValidatedLinearGaugeWidget,
-    ValidatedSceneConfig, ValidatedTimeValue, ValidatedValueWidget,
+    ResolvedBarGeometry, ValidatedArcGaugeWidget, ValidatedBackdrop, ValidatedElapsedTimeValue,
+    ValidatedGForceWidget, ValidatedGradientWidget, ValidatedHeading, ValidatedLabel,
+    ValidatedLapTimer, ValidatedLeanAngleWidget, ValidatedLinearGaugeOrientation,
+    ValidatedLinearGaugeWidget, ValidatedSceneConfig, ValidatedTimeValue, ValidatedValueWidget,
 };
 use crate::types::{DisplayType, MetricKind, TrackFillStyle};
 use chrono_tz::Tz;
@@ -113,6 +113,7 @@ pub struct PreparedLapTimer {
 pub enum PreparedValue {
     StandardText(PreparedStandardText),
     TimeText(ValidatedTimeValue),
+    ElapsedTime(ValidatedElapsedTimeValue),
     Gradient(ValidatedGradientWidget),
     HeadingTape(PreparedHeadingTape),
     LeanAngle(PreparedLeanAngle),
@@ -127,6 +128,7 @@ impl PreparedValue {
         match self {
             Self::StandardText(value) => value.validated.metric,
             Self::TimeText(_) => MetricKind::Time,
+            Self::ElapsedTime(_) => MetricKind::ElapsedTime,
             Self::Gradient(_) => MetricKind::Gradient,
             Self::HeadingTape(_) => MetricKind::Heading,
             Self::LeanAngle(_) => MetricKind::LeanAngle,
@@ -141,6 +143,7 @@ impl PreparedValue {
         match self {
             Self::StandardText(value) => value.validated.display_type,
             Self::TimeText(value) => value.base.display_type,
+            Self::ElapsedTime(value) => value.base.display_type,
             Self::Gradient(_) => DisplayType::Text,
             Self::HeadingTape(_) => DisplayType::Tape,
             Self::LeanAngle(_) => DisplayType::LeanAngle,
@@ -155,6 +158,7 @@ impl PreparedValue {
         match self {
             Self::StandardText(value) => value.validated.x,
             Self::TimeText(value) => value.base.x,
+            Self::ElapsedTime(value) => value.base.x,
             Self::Gradient(value) => value.x,
             Self::HeadingTape(value) => value.validated.x,
             Self::LeanAngle(value) => value.validated.x,
@@ -169,6 +173,7 @@ impl PreparedValue {
         match self {
             Self::StandardText(value) => value.validated.y,
             Self::TimeText(value) => value.base.y,
+            Self::ElapsedTime(value) => value.base.y,
             Self::Gradient(value) => value.y,
             Self::HeadingTape(value) => value.validated.y,
             Self::LeanAngle(value) => value.validated.y,
@@ -191,6 +196,14 @@ pub struct PreparedRenderAssets {
     pub(crate) route_cache: Option<RouteWidgetCache>,
     pub(crate) elevation_cache: Option<ElevationWidgetCache>,
     pub(crate) base_rgba: Option<Vec<u8>>,
+    /// Full source-activity duration in seconds, independent of the current
+    /// render scene's trim window. Used by the elapsed-time widget so a
+    /// multi-clip activity reports the same total across every clip.
+    pub(crate) full_activity_duration_seconds: f64,
+    /// This render scene's absolute offset into the full source activity, in
+    /// seconds. Zero for a single-clip export; non-zero when the scene
+    /// renders a later portion of a multi-clip activity.
+    pub(crate) scene_start_offset_seconds: f64,
 }
 
 impl PreparedRenderAssets {
