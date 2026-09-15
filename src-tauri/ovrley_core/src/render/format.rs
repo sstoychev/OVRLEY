@@ -6,11 +6,11 @@
 //! on layout.
 
 use crate::activity::schema::DenseActivityReport;
+use crate::normalize::ElapsedTimeFormat;
 use crate::normalize::{
     ValidatedElapsedTimeValue, ValidatedGradientWidget, ValidatedTimeFormatting,
     ValidatedTimeValue, ValidatedValueFormatting, ValidatedValueWidget,
 };
-use crate::normalize::ElapsedTimeFormat;
 use crate::standard_metrics::{
     standard_metric_formatter, standard_metric_interpolation, standard_metric_unit_label,
     StandardMetricFormatterKind, StandardMetricInterpolationKind,
@@ -331,12 +331,18 @@ pub fn format_validated_time_parts(
     }
 }
 
-/// Formats an `H:MM:SS` duration string, clamping negative input to zero.
+/// Formats an `H:MM:SS` duration string, clamping negative and non-finite input to zero.
 fn format_hms(total_seconds: f64) -> String {
-    let total = total_seconds.max(0.0).round() as i64;
+    let total = if total_seconds.is_finite() {
+        total_seconds.max(0.0).round() as i64
+    } else {
+        0
+    };
+
     let hours = total / 3600;
     let minutes = (total % 3600) / 60;
     let seconds = total % 60;
+
     format!("{hours:02}:{minutes:02}:{seconds:02}")
 }
 
@@ -394,7 +400,6 @@ pub fn format_validated_elapsed_time_parts(
         icon_kind: super::widgets::value::metric_icon_kind_for_value(MetricKind::ElapsedTime),
     }
 }
-
 
 fn format_validated_standard_metric_parts<'a>(
     validated: &ValidatedValueWidget,
@@ -892,7 +897,7 @@ fn format_balance_value(left_value: f64, decimals: usize, balance_format: Option
 
 #[cfg(test)]
 mod tests {
-    use super::{format_balance_value, format_coordinates, format_number};
+    use super::{format_balance_value, format_coordinates, format_hms, format_number};
 
     #[test]
     fn balance_percent_label_omits_spaces_around_slash() {
@@ -946,5 +951,24 @@ mod tests {
         let missing = format_coordinates(None, None, "both", "dms");
         assert_eq!(missing.lines[0].value_text, "--°--′--″");
         assert_eq!(missing.lines[1].value_text, "--°--′--″");
+    }
+
+    #[test]
+    fn hms_format_handles_seconds_minutes_and_hours() {
+        assert_eq!(format_hms(0.0), "00:00:00");
+        assert_eq!(format_hms(61.0), "00:01:01");
+        assert_eq!(format_hms(3661.0), "01:01:01");
+    }
+
+    #[test]
+    fn hms_format_clamps_negative_values_to_zero() {
+        assert_eq!(format_hms(-1.0), "00:00:00");
+    }
+
+    #[test]
+    fn hms_format_handles_non_finite_values() {
+        assert_eq!(format_hms(f64::NAN), "00:00:00");
+        assert_eq!(format_hms(f64::INFINITY), "00:00:00");
+        assert_eq!(format_hms(f64::NEG_INFINITY), "00:00:00");
     }
 }
