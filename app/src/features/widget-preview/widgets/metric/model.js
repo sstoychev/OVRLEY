@@ -302,6 +302,7 @@ export function buildMetricWidgetPreviewModel({ widget, activity, previewSecond,
     valueText = formatTimeValue(widget.data.format, getInterpolatedTimeValue(displayActivity, previewSecond), displayActivity?.metadata?.timezone)
   } else if (widget.type === 'elapsed_time') {
     valueText = formatElapsedTimeValue(widget.data.format, previewSecond, activity?.trim_end_seconds ?? 0)
+    // TODO(Stoycho) - resolve this properly
     // valueText =
     //   widget.data.time_mode === 'elapsed'
     //     ? formatElapsedTimeValue(
