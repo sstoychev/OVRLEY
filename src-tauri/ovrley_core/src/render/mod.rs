@@ -593,10 +593,13 @@ fn render_frame_to_surface(
                         full_activity_duration_seconds: 0.0,
                         altitude_offset_m: prepared.altitude_offset_m,
                         timezone: None,
+                        elapsed_time: None,
                     })?;
                 }
                 PreparedValue::TimeText(validated) => {
                     let style = validated_time_style(validated, &prepared_assets.scene, scale);
+                    let activity_elapsed_seconds = prepared_assets.scene.start
+                        + dense_activity.frame_elapsed_seconds[frame_index];
                     let static_parts = if static_metric_parts_rendered {
                         static_metric_parts_for_value(&validated.base)
                     } else {
@@ -620,6 +623,11 @@ fn render_frame_to_surface(
                         full_activity_duration_seconds: 0.0,
                         altitude_offset_m: 0.0,
                         timezone: prepared_assets.timezone,
+                        elapsed_time: Some(crate::render::format::ElapsedTimeValues {
+                            activity_seconds: activity_elapsed_seconds,
+                            export_seconds: activity_elapsed_seconds
+                                - prepared_assets.export_start_seconds,
+                        }),
                     })?;
                 }
                 PreparedValue::ElapsedTime(validated) => {
@@ -669,6 +677,7 @@ fn render_frame_to_surface(
                         full_activity_duration_seconds: 0.0,
                         altitude_offset_m: 0.0,
                         timezone: None,
+                        elapsed_time: None,
                     })?;
                 }
                 PreparedValue::LapTimer(widget) => {

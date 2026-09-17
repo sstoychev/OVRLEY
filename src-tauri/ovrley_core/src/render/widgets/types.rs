@@ -189,6 +189,7 @@ impl PreparedValue {
 #[derive(Clone, Debug)]
 pub struct PreparedRenderAssets {
     pub(crate) scene: ValidatedSceneConfig,
+    pub(crate) export_start_seconds: f64,
     pub(crate) timezone: Option<Tz>,
     pub(crate) backdrops: Vec<ValidatedBackdrop>,
     pub(crate) labels: Vec<ValidatedLabel>,

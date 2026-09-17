@@ -23,7 +23,7 @@ use crate::error::CoreResult;
 use crate::normalize::{ValidatedElapsedTimeValue, ValidatedGradientWidget, ValidatedTimeValue, ValidatedValueWidget};
 use crate::render::format::{
     format_metric_presentation_parts, format_validated_elapsed_time_parts,
-    format_validated_time_parts,
+    format_validated_time_parts, ElapsedTimeValues
 };
 use crate::render::text::ResolvedTextStyle;
 use crate::standard_metrics::{display_type_layout_mode, DisplayTypeLayoutMode};
@@ -78,6 +78,7 @@ pub(crate) struct MetricWidgetRequest<'a> {
     pub full_activity_duration_seconds: f64,
     pub altitude_offset_m: f64,
     pub timezone: Option<Tz>,
+    pub elapsed_time: Option<ElapsedTimeValues>,
 }
 
 /// Draws a configured metric widget and reports whether it handled the value.
@@ -120,7 +121,11 @@ pub(crate) fn draw_metric_value_widget_with_config(
             .time
             .get(request.frame_index)
             .and_then(|value| value.as_deref());
-        let parts = format_validated_time_parts(validated_time, raw_time, request.timezone);
+        let elapsed_time = request
+            .elapsed_time
+            .expect("time widget must receive canonical elapsed times");
+        let parts =
+            format_validated_time_parts(validated_time, raw_time, elapsed_time, request.timezone);
         draw_metric_parts(
             request.canvas,
             request.base_style,
@@ -306,6 +311,7 @@ mod tests {
                     full_activity_duration_seconds: 0.0,
                     altitude_offset_m: 0.0,
                     timezone: None,
+                    elapsed_time: None,
                 })
                 .unwrap(),
                 "Boxed display type {dt_str} should be marked handled by value module"
@@ -437,6 +443,7 @@ mod tests {
                 full_activity_duration_seconds: 0.0,
                 altitude_offset_m: 0.0,
                 timezone: None,
+                elapsed_time: None,
             })
             .unwrap(),
             "Text display type should be handled by value module"
@@ -468,6 +475,7 @@ mod tests {
                 full_activity_duration_seconds: 0.0,
                 altitude_offset_m: 0.0,
                 timezone: None,
+                elapsed_time: None,
             })
             .unwrap(),
             "GPS coordinate text should be handled by value module"
