@@ -15,7 +15,7 @@
  * @returns {object|null} Preview model with metricLayout, visualBounds, and text values, or null for non-value or boxed widgets.
  */
 
-import { formatElapsedTimeValue, formatStandardMetricDisplay, formatTimeValue, formatElapsedTimeValue } from './format'
+import { formatElapsedTimeValue, formatStandardMetricDisplay, formatTimeValue } from './format'
 import {
   getMetricWidgetLayout,
   getMetricWidgetVisualBounds,
