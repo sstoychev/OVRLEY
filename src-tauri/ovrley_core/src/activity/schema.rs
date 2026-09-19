@@ -594,6 +594,8 @@ pub struct DenseActivityReport {
     pub full_activity_distance: Option<f64>,
     /// Final source-activity cumulative positive elevation gain.
     pub full_activity_total_ascent: Option<f64>,
+    /// Total duration in seconds of the full (untrimmed) source activity.
+    pub full_activity_duration_seconds: f64,
     /// Densified telemetry vectors used by text values and widgets.
     pub series: DenseSeriesReport,
 }
@@ -783,6 +785,8 @@ pub struct TrimmedActivity {
     pub total_ascent: NumericSeries,
     /// Full-activity cumulative positive elevation gain in meters.
     pub full_activity_total_ascent: Option<f64>,
+    /// Total duration in seconds of the full (untrimmed) source activity.
+    pub full_activity_duration_seconds: f64,
     /// Trimmed barometric-altitude samples in meters.
     pub barometric_altitude: NumericSeries,
     /// Trimmed speed samples in meters per second.

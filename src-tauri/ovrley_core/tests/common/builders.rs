@@ -92,6 +92,7 @@ pub fn minimal_dense_activity() -> DenseActivityReport {
         frame_distance_progress: vec![Some(0.0)],
         full_activity_distance: None,
         full_activity_total_ascent: None,
+        full_activity_duration_seconds: 0.0,
         series: empty_dense_series(),
     }
 }
@@ -105,6 +106,7 @@ pub fn dense_report_with(fill: impl FnOnce(&mut DenseSeriesReport)) -> DenseActi
         frame_distance_progress: vec![Some(0.0)],
         full_activity_distance: None,
         full_activity_total_ascent: None,
+        full_activity_duration_seconds: 0.0,
         series,
     }
 }
@@ -126,6 +128,7 @@ pub fn minimal_trimmed_activity(times: Vec<f64>) -> TrimmedActivity {
         distance: vec![],
         full_activity_distance: None,
         full_activity_total_ascent: None,
+        full_activity_duration_seconds: 0.0,
         heartrate: vec![],
         cadence: vec![],
         power: vec![],

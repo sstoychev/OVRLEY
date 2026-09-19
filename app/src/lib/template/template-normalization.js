@@ -222,6 +222,9 @@ function normalizeValue(value = {}, globalDefaults) {
     if (typeof withDefaults.show_hundredths !== 'boolean') {
       throw new Error(`Invalid show_hundredths: ${String(withDefaults.show_hundredths)}`)
     }
+    if (typeof withDefaults.show_total !== 'boolean') {
+      throw new Error(`Invalid show_total: ${String(withDefaults.show_total)}`)
+    }
   }
   const supportsContentAlignment = withDefaults.display_type === 'text' && type !== 'gradient' && type !== 'lap_timer'
   if (supportsContentAlignment && !['left', 'center', 'right'].includes(withDefaults.content_alignment)) {

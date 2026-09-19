@@ -1,0 +1,52 @@
+name: Build Windows Development
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - elapsed_time_total
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Windows x86_64
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.25.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate shared packaging resources
+        run: pnpm prepare:packaging
+
+      - name: Build unsigned Windows executable
+        run: pnpm tauri build --bundles nsis --no-sign
+        env:
+          VITE_OVRLEY_VERSION: dev-${{ github.run_number }}
+
+      - name: Upload Windows executable
+        uses: actions/upload-artifact@v7
+        with:
+          name: ovrley-windows-dev-${{ github.run_number }}
+          path: |
+            src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error

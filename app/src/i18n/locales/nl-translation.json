@@ -618,6 +618,7 @@
     "activityStart": "de activiteit",
     "exportStart": "de export",
     "hundredths": "Honderdsten van een seconde",
+    "showTotal": "Totaal weergeven",
     "timeFormat12h": "Alleen tijd (12h)",
     "timeFormat12hWithSeconds": "Alleen tijd (12h met seconden)",
     "timeFormat24h": "Alleen tijd (24h)",

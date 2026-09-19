@@ -128,6 +128,7 @@ fn minimal_dense_activity() -> DenseActivityReport {
         frame_distance_progress: vec![Some(0.0), Some(0.5), Some(1.0)],
         full_activity_distance: None,
         full_activity_total_ascent: None,
+        full_activity_duration_seconds: 0.0,
         series: DenseSeriesReport {
             speed: vec![None; 3],
             distance: vec![None; 3],

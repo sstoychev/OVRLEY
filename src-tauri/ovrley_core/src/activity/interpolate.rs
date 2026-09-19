@@ -416,6 +416,7 @@ pub fn densify_activity(
         frame_distance_progress,
         full_activity_distance: trimmed.full_activity_distance,
         full_activity_total_ascent: trimmed.full_activity_total_ascent,
+        full_activity_duration_seconds: trimmed.full_activity_duration_seconds,
         series: DenseSeriesReport {
             speed: densify(
                 &trimmed.sample_elapsed_seconds,

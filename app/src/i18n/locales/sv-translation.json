@@ -618,6 +618,7 @@
     "activityStart": "aktiviteten",
     "exportStart": "exporten",
     "hundredths": "Hundradelssekunder",
+    "showTotal": "Visa totalt",
     "timeFormat12h": "Endast tid (12h)",
     "timeFormat12hWithSeconds": "Endast tid (12h med sekunder)",
     "timeFormat24h": "Endast tid (24h)",

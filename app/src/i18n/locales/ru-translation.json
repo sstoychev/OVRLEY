@@ -618,6 +618,7 @@
     "activityStart": "активности",
     "exportStart": "экспорта",
     "hundredths": "Сотые доли секунды",
+    "showTotal": "Показать общее время",
     "timeFormat12h": "Только время (12h)",
     "timeFormat12hWithSeconds": "Только время (12h с секундами)",
     "timeFormat24h": "Только время (24h)",
