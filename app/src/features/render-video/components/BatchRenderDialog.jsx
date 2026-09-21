@@ -10,7 +10,10 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useBatchRenderWorkflow from '../hooks/useBatchRenderWorkflow'
 import { useTranslation } from 'react-i18next'
 
@@ -44,6 +47,16 @@ export default function BatchRenderDialog() {
     setBatchItemSkipOverlay,
     runBatch,
     cancelBatch,
+    renderSettings,
+    mp4OutputFormats,
+    selectedOutputFormatValue,
+    selectedAccelerationValue,
+    selectedAccelerationOptions,
+    updateRateOptions,
+    handleFormatChange,
+    handleAccelerationChange,
+    handleBitrateChange,
+    handleUpdateRateChange,
   } = useBatchRenderWorkflow()
 
   const canRun = batchQueue.length > 0 && Boolean(batchOutputFolder) && !batchRunning
@@ -91,6 +104,85 @@ export default function BatchRenderDialog() {
                 <span className="truncate">{batchOutputFolder || t('render-video.chooseFolder', 'Choose folder...')}</span>
               </Button>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {t('render-video.codecOutputFormat', 'Codec / Output Format')}
+              </Label>
+              <Select value={selectedOutputFormatValue} onValueChange={handleFormatChange} disabled={batchRunning}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {mp4OutputFormats.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {t('render-video.hardwareAcceleration', 'Hardware Acceleration')}
+              </Label>
+              <Select value={selectedAccelerationValue} onValueChange={handleAccelerationChange} disabled={batchRunning}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {selectedAccelerationOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} disabled={!option.available}>
+                      <span className="flex w-full items-center justify-between gap-3">
+                        <span className="min-w-0 truncate">{option.label}</span>
+                        {!option.available && (
+                          <span className="shrink-0 text-right text-[10px] text-muted-foreground">
+                            {t('render-video.unavailable', 'Unavailable')}
+                          </span>
+                        )}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('render-video.bitrate', 'Bitrate')}</Label>
+              <span className="rounded bg-surface-strong px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                {renderSettings.bitrateMbps ?? 20} Mbps
+              </span>
+            </div>
+            <Slider
+              min={5}
+              max={100}
+              step={5}
+              value={[renderSettings.bitrateMbps ?? 20]}
+              onValueChange={([value]) => handleBitrateChange(value)}
+              disabled={batchRunning}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              {t('render-video.widgetUpdateRate', 'Widget Update Rate')}
+            </Label>
+            <Tabs value={renderSettings.widgetUpdateRate.toString()} onValueChange={(value) => handleUpdateRateChange(parseInt(value, 10))}>
+              <TabsList
+                className="grid h-8 w-full bg-surface p-0.5"
+                style={{ gridTemplateColumns: `repeat(${updateRateOptions.length}, minmax(0, 1fr))` }}
+              >
+                {updateRateOptions.map((rate) => (
+                  <TabsTrigger key={rate} value={rate.toString()} className="text-[10px]" disabled={batchRunning}>
+                    1/{rate}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
 
           <div className="max-h-80 space-y-1 overflow-y-auto rounded-sm border border-border/70 bg-surface p-2">
