@@ -23,7 +23,8 @@ function StatusIcon({ status }) {
   if (status === 'done') return <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
   if (status === 'error') return <XCircle className="h-4 w-4 shrink-0 text-red-500" />
   if (status === 'cancelled') return <Square className="h-4 w-4 shrink-0 text-muted-foreground" />
-  if (status === 'importing' || status === 'rendering') return <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+  if (status === 'importing' || status === 'rendering' || status === 'checking')
+    return <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
   return <span className="h-4 w-4 shrink-0" />
 }
 
@@ -263,6 +264,9 @@ export default function BatchRenderDialog() {
                     <StatusIcon status={item.status} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-medium text-foreground">{item.filename}</p>
+                      {item.status === 'checking' ? (
+                        <p className="truncate text-[10px] text-muted-foreground">{t('render-video.checkingOverlap', 'Checking overlap...')}</p>
+                      ) : null}
                       {item.status === 'error' && item.error ? <p className="truncate text-[10px] text-red-500">{item.error}</p> : null}
                       {isActive && currentItemProgress ? (
                         <Progress
@@ -280,7 +284,7 @@ export default function BatchRenderDialog() {
                       <Switch
                         checked={!item.skipOverlay}
                         onCheckedChange={(checked) => setBatchItemSkipOverlay(item.id, !checked)}
-                        disabled={batchRunning}
+                        disabled={batchRunning || item.status === 'checking'}
                       />
                     </Label>
                     <Button

@@ -12,7 +12,8 @@ import { normalizeUpdateRateForFps, getUpdateRateOptions } from '@/lib/update-ra
 import { pathInDirectory } from '@/lib/utils'
 import { useFpsMode } from '@/hooks/useFpsMode'
 import useStore from '@/store/useStore'
-import useVideoImport from '@/features/video-preview/hooks/useVideoImport'
+import { resolveVideoSyncState } from '@/store/slices/createVideoImportSlice'
+import useVideoImport, { prepareVideoPath } from '@/features/video-preview/hooks/useVideoImport'
 import { OUTPUT_FORMATS, OUTPUT_FORMATS_BY_VALUE } from '../data/renderConstants'
 import { getDefaultBitrate } from '../data/bitrateDefaults'
 import { getRenderOutputExtension } from '../utils/render-output'
@@ -182,13 +183,40 @@ export default function useBatchRenderWorkflow() {
       setRenderSettings({ ...renderSettings, fps, widgetUpdateRate: normalizeUpdateRateForFps(fps, renderSettings.widgetUpdateRate) }),
   })
 
+  // Probes each queued video's creation time against the loaded activity so
+  // the per-item overlay toggle defaults correctly without a manual render.
+  const detectQueueOverlaps = useCallback(
+    async (paths) => {
+      const activitySummary = useStore.getState().activitySummary
+      if (!activitySummary) return
+
+      for (const path of paths) {
+        const item = useStore.getState().batchQueue.find((candidate) => candidate.path === path)
+        if (!item) continue
+
+        setBatchItemStatus(item.id, 'checking')
+        try {
+          const { importedVideoState } = await prepareVideoPath(path)
+          const { videoSyncWarning } = resolveVideoSyncState(importedVideoState, activitySummary)
+          setBatchItemSkipOverlay(item.id, videoSyncWarning !== null)
+        } catch (error) {
+          console.warn(`Could not determine activity overlap for ${path}:`, error)
+        } finally {
+          setBatchItemStatus(item.id, 'pending')
+        }
+      }
+    },
+    [setBatchItemSkipOverlay, setBatchItemStatus],
+  )
+
   const pickVideoFolder = useCallback(async () => {
     const directory = await openDirectoryPath({ lastDirectoryKey: 'last-batch-video-dir' })
     if (!directory) return
     const paths = await backend.listDirectoryVideoFiles(directory)
     setBatchVideoFolder(directory)
     setBatchQueueFromPaths(paths)
-  }, [setBatchQueueFromPaths, setBatchVideoFolder])
+    void detectQueueOverlaps(paths)
+  }, [detectQueueOverlaps, setBatchQueueFromPaths, setBatchVideoFolder])
 
   const pickOutputFolder = useCallback(async () => {
     const directory = await openDirectoryPath({ lastDirectoryKey: 'last-batch-output-dir' })
