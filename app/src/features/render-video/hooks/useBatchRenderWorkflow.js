@@ -13,6 +13,7 @@ import { pathInDirectory } from '@/lib/utils'
 import { useFpsMode } from '@/hooks/useFpsMode'
 import useStore from '@/store/useStore'
 import { resolveVideoSyncState } from '@/store/slices/createVideoImportSlice'
+import { runWithoutEditorHistory } from '@/features/undo-redo/undoHistory'
 import useVideoImport, { prepareVideoPath } from '@/features/video-preview/hooks/useVideoImport'
 import { OUTPUT_FORMATS, OUTPUT_FORMATS_BY_VALUE } from '../data/renderConstants'
 import { getDefaultBitrate } from '../data/bitrateDefaults'
@@ -33,6 +34,11 @@ function outputFilenameFor(filename, exportMode) {
 }
 
 const OVERLAP_CHECK_CONCURRENCY = 4
+
+// Mirrors the Video sync "Apply Timezone" switch, which shows unchecked for anything but 'utc'.
+function selectedTimezoneMode(state) {
+  return state.videoSyncTimezoneMode === 'utc' ? 'utc' : 'local'
+}
 
 // Runs `worker` over `items` with at most `limit` in flight at once, so
 // probing a large queue doesn't spawn one ffprobe process per video at once.
@@ -205,23 +211,19 @@ export default function useBatchRenderWorkflow() {
       const activitySummary = useStore.getState().activitySummary
       if (!activitySummary) return
 
+      const timezoneMode = selectedTimezoneMode(useStore.getState())
       const itemsByPath = new Map(useStore.getState().batchQueue.map((candidate) => [candidate.path, candidate]))
+      const items = paths.map((path) => itemsByPath.get(path)).filter(Boolean)
+      for (const item of items) setBatchItemStatus(item.id, 'checking')
 
-      // Probe queued videos with bounded concurrency so each row gets its own
-      // spinner without one spinner crawling down the list; failures are
-      // surfaced per item instead of being swallowed as a silent "no issue".
-      await runWithConcurrencyLimit(paths, OVERLAP_CHECK_CONCURRENCY, async (path) => {
-        const item = itemsByPath.get(path)
-        if (!item) return
-
-        setBatchItemStatus(item.id, 'checking')
+      await runWithConcurrencyLimit(items, OVERLAP_CHECK_CONCURRENCY, async (item) => {
         try {
-          const { importedVideoState } = await prepareVideoPath(path)
-          const { videoSyncWarning } = resolveVideoSyncState(importedVideoState, activitySummary)
+          const { importedVideoState } = await prepareVideoPath(item.path)
+          const { videoSyncWarning } = resolveVideoSyncState({ ...importedVideoState, videoSyncTimezoneMode: timezoneMode }, activitySummary)
           setBatchItemSkipOverlay(item.id, videoSyncWarning !== null)
           setBatchItemStatus(item.id, 'pending')
         } catch (error) {
-          console.warn(`Could not determine activity overlap for ${path}:`, error)
+          console.warn(`Could not determine activity overlap for ${item.path}:`, error)
           setBatchItemStatus(item.id, 'error', 'Could not check activity overlap')
         }
       })
@@ -245,11 +247,16 @@ export default function useBatchRenderWorkflow() {
   }, [setBatchOutputFolder])
 
   const renderQueueItem = useCallback(
-    async (item) => {
+    async (item, timezoneMode) => {
       setBatchActiveItemId(item.id)
       setBatchItemStatus(item.id, 'importing')
       setCurrentItemProgress(null)
       await loadVideoPath(item.path)
+
+      const { parsedActivitySource, setVideoSyncTimezoneMode } = useStore.getState()
+      if (parsedActivitySource === 'activity-file') {
+        await runWithoutEditorHistory(useStore, () => setVideoSyncTimezoneMode(timezoneMode))
+      }
 
       const state = useStore.getState()
       if (!state.parsedActivity) {
@@ -319,6 +326,8 @@ export default function useBatchRenderWorkflow() {
     if (batchQueue.length === 0) return
 
     cancelRequestedRef.current = false
+    // Captured once: importing each queued video resets the editor's selection.
+    const timezoneMode = selectedTimezoneMode(useStore.getState())
     setBatchRunning(true)
     try {
       for (const item of batchQueue) {
@@ -327,7 +336,7 @@ export default function useBatchRenderWorkflow() {
           continue
         }
         try {
-          await renderQueueItem(item)
+          await renderQueueItem(item, timezoneMode)
         } catch (error) {
           setBatchItemStatus(item.id, error?.code === 'cancelled' ? 'cancelled' : 'error', error?.message || 'Render failed')
           if (error?.code === 'cancelled') cancelRequestedRef.current = true
