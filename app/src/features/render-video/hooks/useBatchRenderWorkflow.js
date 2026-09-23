@@ -32,6 +32,21 @@ function outputFilenameFor(filename, exportMode) {
   return `${stem}.${getRenderOutputExtension(exportMode)}`
 }
 
+const OVERLAP_CHECK_CONCURRENCY = 4
+
+// Runs `worker` over `items` with at most `limit` in flight at once, so
+// probing a large queue doesn't spawn one ffprobe process per video at once.
+async function runWithConcurrencyLimit(items, limit, worker) {
+  let cursor = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const index = cursor++
+      await worker(items[index], index)
+    }
+  })
+  await Promise.all(runners)
+}
+
 function waitForRenderCompletion(renderId) {
   return new Promise((resolve, reject) => {
     let unlisten = null
@@ -190,21 +205,26 @@ export default function useBatchRenderWorkflow() {
       const activitySummary = useStore.getState().activitySummary
       if (!activitySummary) return
 
-      for (const path of paths) {
-        const item = useStore.getState().batchQueue.find((candidate) => candidate.path === path)
-        if (!item) continue
+      const itemsByPath = new Map(useStore.getState().batchQueue.map((candidate) => [candidate.path, candidate]))
+
+      // Probe queued videos with bounded concurrency so each row gets its own
+      // spinner without one spinner crawling down the list; failures are
+      // surfaced per item instead of being swallowed as a silent "no issue".
+      await runWithConcurrencyLimit(paths, OVERLAP_CHECK_CONCURRENCY, async (path) => {
+        const item = itemsByPath.get(path)
+        if (!item) return
 
         setBatchItemStatus(item.id, 'checking')
         try {
           const { importedVideoState } = await prepareVideoPath(path)
           const { videoSyncWarning } = resolveVideoSyncState(importedVideoState, activitySummary)
           setBatchItemSkipOverlay(item.id, videoSyncWarning !== null)
+          setBatchItemStatus(item.id, 'pending')
         } catch (error) {
           console.warn(`Could not determine activity overlap for ${path}:`, error)
-        } finally {
-          setBatchItemStatus(item.id, 'pending')
+          setBatchItemStatus(item.id, 'error', 'Could not check activity overlap')
         }
-      }
+      })
     },
     [setBatchItemSkipOverlay, setBatchItemStatus],
   )
