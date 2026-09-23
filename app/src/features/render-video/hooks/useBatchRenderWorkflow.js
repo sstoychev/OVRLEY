@@ -10,10 +10,12 @@ import { DEFAULT_EXPORT_RANGE } from '@/lib/template/template-constants'
 import { openDirectoryPath } from '@/lib/file-dialog'
 import { normalizeUpdateRateForFps, getUpdateRateOptions } from '@/lib/update-rate'
 import { pathInDirectory } from '@/lib/utils'
+import { useFpsMode } from '@/hooks/useFpsMode'
 import useStore from '@/store/useStore'
 import useVideoImport from '@/features/video-preview/hooks/useVideoImport'
 import { OUTPUT_FORMATS, OUTPUT_FORMATS_BY_VALUE } from '../data/renderConstants'
 import { getDefaultBitrate } from '../data/bitrateDefaults'
+import { getRenderOutputExtension } from '../utils/render-output'
 import {
   getAccelerationValueForSettings,
   getExportCodecForSelection,
@@ -24,11 +26,9 @@ import {
   isMp4Codec,
 } from '../utils/codecUtils'
 
-const MP4_OUTPUT_FORMATS = OUTPUT_FORMATS.filter((format) => format.group === 'mp4')
-
-function outputFilenameFor(filename) {
+function outputFilenameFor(filename, exportMode) {
   const stem = filename.replace(/\.[^.]*$/, '')
-  return `${stem}.mp4`
+  return `${stem}.${getRenderOutputExtension(exportMode)}`
 }
 
 function waitForRenderCompletion(renderId) {
@@ -99,22 +99,37 @@ export default function useBatchRenderWorkflow() {
   const cancelRequestedRef = useRef(false)
   const resolutionWidth = importedVideoResolution?.width || config?.scene?.width
   const resolutionHeight = importedVideoResolution?.height || config?.scene?.height
+  const exportMode = renderSettings.exportMode || 'composite'
+  const isCompositeExport = exportMode === 'composite'
 
-  // Batch renders always composite onto a video, so the codec must stay in the
-  // MP4 family. Switch away from a transparent codec (e.g. the app default)
-  // the first time the batch dialog is opened with one selected.
+  // Codec selection follows the active export pipeline, same as the single
+  // render dialog: composite exports must land on an MP4 codec, transparent
+  // exports must not.
   useEffect(() => {
-    if (!batchDialogOpen || isMp4Codec(renderSettings.codec)) return
-    const fallbackCodec = getFirstAvailableMp4ExportCodec(platformOs, availableCodecs)
-    if (!fallbackCodec) return
-    setRenderSettings({
-      ...renderSettings,
-      codec: fallbackCodec,
-      bitrateMbps: getDefaultBitrate(resolutionWidth, resolutionHeight, renderSettings.fps, fallbackCodec),
-    })
-  }, [availableCodecs, batchDialogOpen, platformOs, renderSettings, resolutionHeight, resolutionWidth, setRenderSettings])
+    if (!batchDialogOpen) return
+    const codecIsMp4 = isMp4Codec(renderSettings.codec)
 
-  const selectedOutputFormatValue = getOutputFormatForExportCodec(renderSettings.codec)?.value || 'h264'
+    if (isCompositeExport && !codecIsMp4) {
+      const fallbackCodec = getFirstAvailableMp4ExportCodec(platformOs, availableCodecs)
+      if (!fallbackCodec) return
+      setRenderSettings({
+        ...renderSettings,
+        codec: fallbackCodec,
+        bitrateMbps: getDefaultBitrate(resolutionWidth, resolutionHeight, renderSettings.fps, fallbackCodec),
+      })
+      return
+    }
+
+    if (!isCompositeExport && codecIsMp4) {
+      setRenderSettings({ ...renderSettings, codec: 'prores_ks', bitrateMbps: null })
+    }
+  }, [availableCodecs, batchDialogOpen, isCompositeExport, platformOs, renderSettings, resolutionHeight, resolutionWidth, setRenderSettings])
+
+  const outputFormatOptions = useMemo(
+    () => OUTPUT_FORMATS.filter((format) => format.group === (isCompositeExport ? 'mp4' : 'transparent')),
+    [isCompositeExport],
+  )
+  const selectedOutputFormatValue = getOutputFormatForExportCodec(renderSettings.codec)?.value || (isCompositeExport ? 'h264' : 'prores')
   const selectedAccelerationValue = getAccelerationValueForSettings({ exportCodec: renderSettings.codec })
   const selectedAccelerationOptions = useMemo(
     () => getVisibleAccelerationOptions(OUTPUT_FORMATS_BY_VALUE[selectedOutputFormatValue], platformOs, availableCodecs),
@@ -127,7 +142,12 @@ export default function useBatchRenderWorkflow() {
       const format = OUTPUT_FORMATS_BY_VALUE[formatValue]
       const acceleration = getFirstAvailableAcceleration(format, platformOs, availableCodecs)
       const codec = acceleration ? getExportCodecForSelection(formatValue, acceleration.value) : format.codecs.cpu
-      setRenderSettings({ ...renderSettings, codec, bitrateMbps: getDefaultBitrate(resolutionWidth, resolutionHeight, renderSettings.fps, codec) })
+      const nextIsMp4Codec = format.group === 'mp4'
+      setRenderSettings({
+        ...renderSettings,
+        codec,
+        bitrateMbps: nextIsMp4Codec ? getDefaultBitrate(resolutionWidth, resolutionHeight, renderSettings.fps, codec) : null,
+      })
     },
     [availableCodecs, platformOs, renderSettings, resolutionHeight, resolutionWidth, setRenderSettings],
   )
@@ -150,6 +170,17 @@ export default function useBatchRenderWorkflow() {
     (value) => setRenderSettings({ ...renderSettings, widgetUpdateRate: value }),
     [renderSettings, setRenderSettings],
   )
+
+  const handleExportModeChange = useCallback(
+    (nextExportMode) => setRenderSettings({ ...renderSettings, exportMode: nextExportMode }),
+    [renderSettings, setRenderSettings],
+  )
+
+  const { fpsMode, handleFpsModeChange, handleCustomFpsChange } = useFpsMode({
+    fps: renderSettings.fps,
+    onFpsChange: (fps) =>
+      setRenderSettings({ ...renderSettings, fps, widgetUpdateRate: normalizeUpdateRateForFps(fps, renderSettings.widgetUpdateRate) }),
+  })
 
   const pickVideoFolder = useCallback(async () => {
     const directory = await openDirectoryPath({ lastDirectoryKey: 'last-batch-video-dir' })
@@ -180,15 +211,17 @@ export default function useBatchRenderWorkflow() {
         throw new Error('No template is loaded')
       }
 
+      const itemExportMode = state.renderSettings.exportMode || 'composite'
+      const shouldComposite = itemExportMode === 'composite'
       const effectiveConfig = item.skipOverlay ? { ...state.config, values: [], plots: [] } : state.config
-      const outputPath = pathInDirectory(batchOutputFolder, outputFilenameFor(item.filename))
+      const outputPath = pathInDirectory(batchOutputFolder, outputFilenameFor(item.filename, itemExportMode))
       const updateRate = normalizeUpdateRateForFps(state.importedVideoFps, state.renderSettings.widgetUpdateRate)
 
       setBatchItemStatus(item.id, 'rendering')
       const { default: submitRenderVideo } = await import('@/features/render-video/utils/render-video')
       const result = await submitRenderVideo({
         config: effectiveConfig,
-        exportMode: 'composite',
+        exportMode: itemExportMode,
         exportCodec: state.renderSettings.codec,
         exportBitrate: state.renderSettings.bitrateMbps ?? undefined,
         exportRange: DEFAULT_EXPORT_RANGE,
@@ -199,7 +232,7 @@ export default function useBatchRenderWorkflow() {
         importedVideoFps: state.importedVideoFps,
         importedVideoFpsNum: state.importedVideoFpsNum,
         importedVideoFpsDen: state.importedVideoFpsDen,
-        importedVideoPath: state.importedVideoPath,
+        importedVideoPath: shouldComposite ? state.importedVideoPath : null,
         importedVideoResolution: state.importedVideoResolution,
         parsedActivity: state.parsedActivity,
         startSecond: state.startSecond,
@@ -290,7 +323,9 @@ export default function useBatchRenderWorkflow() {
     runBatch,
     cancelBatch,
     renderSettings,
-    mp4OutputFormats: MP4_OUTPUT_FORMATS,
+    exportMode,
+    isCompositeExport,
+    outputFormatOptions,
     selectedOutputFormatValue,
     selectedAccelerationValue,
     selectedAccelerationOptions,
@@ -299,5 +334,9 @@ export default function useBatchRenderWorkflow() {
     handleAccelerationChange,
     handleBitrateChange,
     handleUpdateRateChange,
+    handleExportModeChange,
+    fpsMode,
+    handleFpsModeChange,
+    handleCustomFpsChange,
   }
 }

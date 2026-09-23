@@ -9,11 +9,13 @@ import { CheckCircle2, FolderOpen, Loader2, Play, Square, Trash2, XCircle } from
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { BlurInput } from '@/components/ui/blur-input'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { isMp4Codec } from '../utils/codecUtils'
 import useBatchRenderWorkflow from '../hooks/useBatchRenderWorkflow'
 import { useTranslation } from 'react-i18next'
 
@@ -48,7 +50,8 @@ export default function BatchRenderDialog() {
     runBatch,
     cancelBatch,
     renderSettings,
-    mp4OutputFormats,
+    exportMode,
+    outputFormatOptions,
     selectedOutputFormatValue,
     selectedAccelerationValue,
     selectedAccelerationOptions,
@@ -57,9 +60,14 @@ export default function BatchRenderDialog() {
     handleAccelerationChange,
     handleBitrateChange,
     handleUpdateRateChange,
+    handleExportModeChange,
+    fpsMode,
+    handleFpsModeChange,
+    handleCustomFpsChange,
   } = useBatchRenderWorkflow()
 
   const canRun = batchQueue.length > 0 && Boolean(batchOutputFolder) && !batchRunning
+  const isMp4Selected = isMp4Codec(renderSettings.codec)
 
   return (
     <Dialog open={batchDialogOpen} onOpenChange={(open) => !open && !batchRunning && closeBatchDialog()}>
@@ -70,9 +78,62 @@ export default function BatchRenderDialog() {
         onEscapeKeyDown={(event) => batchRunning && event.preventDefault()}
         onPointerDownOutside={(event) => batchRunning && event.preventDefault()}
       >
-        <DialogTitle className="text-sm font-semibold text-foreground">{t('render-video.batchRender', 'Batch Render')}</DialogTitle>
+        <div className="flex items-center justify-between gap-4">
+          <DialogTitle className="text-sm font-semibold text-foreground">{t('render-video.batchRender', 'Batch Render')}</DialogTitle>
+          <Tabs value={exportMode} onValueChange={handleExportModeChange}>
+            <TabsList className="h-7 bg-surface p-0.5" variant="toolbar">
+              <TabsTrigger value="transparent" className="px-2 text-[10px]" variant="toolbar" disabled={batchRunning}>
+                {t('render-video.transparent', 'Transparent')}
+              </TabsTrigger>
+              <TabsTrigger value="composite" className="px-2 text-[10px]" variant="toolbar" disabled={batchRunning}>
+                {t('render-video.fullVideo', 'Full Video')}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
         <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                {t('render-video.framerate', 'Framerate')}
+              </Label>
+              <Select value={fpsMode} onValueChange={handleFpsModeChange} disabled={batchRunning}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="24">24 fps</SelectItem>
+                  <SelectItem value="30">30 fps</SelectItem>
+                  <SelectItem value="60">60 fps</SelectItem>
+                  <SelectItem value="custom">{t('render-video.custom', 'Custom')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {fpsMode === 'custom' && (
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {t('render-video.customFps', 'Custom FPS')}
+                </Label>
+                <BlurInput
+                  type="number"
+                  min={1}
+                  step={1}
+                  inputMode="numeric"
+                  value={renderSettings.fps}
+                  onKeyDown={(event) => {
+                    if (['.', ',', 'e', 'E', '+', '-'].includes(event.key)) {
+                      event.preventDefault()
+                    }
+                  }}
+                  onChange={(event) => handleCustomFpsChange(event.target.value)}
+                  className="h-9 text-xs"
+                  disabled={batchRunning}
+                />
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -116,7 +177,7 @@ export default function BatchRenderDialog() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {mp4OutputFormats.map((option) => (
+                  {outputFormatOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -150,22 +211,26 @@ export default function BatchRenderDialog() {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{t('render-video.bitrate', 'Bitrate')}</Label>
-              <span className="rounded bg-surface-strong px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                {renderSettings.bitrateMbps ?? 20} Mbps
-              </span>
+          {isMp4Selected && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {t('render-video.bitrate', 'Bitrate')}
+                </Label>
+                <span className="rounded bg-surface-strong px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  {renderSettings.bitrateMbps ?? 20} Mbps
+                </span>
+              </div>
+              <Slider
+                min={5}
+                max={100}
+                step={5}
+                value={[renderSettings.bitrateMbps ?? 20]}
+                onValueChange={([value]) => handleBitrateChange(value)}
+                disabled={batchRunning}
+              />
             </div>
-            <Slider
-              min={5}
-              max={100}
-              step={5}
-              value={[renderSettings.bitrateMbps ?? 20]}
-              onValueChange={([value]) => handleBitrateChange(value)}
-              disabled={batchRunning}
-            />
-          </div>
+          )}
 
           <div className="space-y-2">
             <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
