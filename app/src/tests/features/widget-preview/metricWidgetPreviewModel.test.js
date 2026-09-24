@@ -177,6 +177,51 @@ describe('metric widget preview model standard metric units', () => {
     expect(unbounded.valueText).toBe('25:01:01')
   })
 
+  test('appends the total duration when show_total is enabled', () => {
+    const widget = {
+      category: 'values',
+      type: 'time',
+      data: {
+        ...TEXT_DEFAULTS,
+        time_mode: 'elapsed',
+        elapsed_origin: 'activity',
+        show_hundredths: false,
+        show_total: true,
+      },
+    }
+    const activity = { trim_end_seconds: 90, sample_elapsed_seconds: [0, 90] }
+
+    const model = buildMetricWidgetPreviewModel({ widget, activity, previewSecond: 30, globalScale: 1 })
+
+    expect(model.valueText).toBe('0:00:30/0:01:30')
+  })
+
+  test('appends the export window total when show_total is enabled with export origin', () => {
+    const widget = {
+      category: 'values',
+      type: 'time',
+      data: {
+        ...TEXT_DEFAULTS,
+        time_mode: 'elapsed',
+        elapsed_origin: 'export',
+        show_hundredths: false,
+        show_total: true,
+      },
+    }
+    const activity = { trim_end_seconds: 100000, sample_elapsed_seconds: [0, 100000] }
+
+    const model = buildMetricWidgetPreviewModel({
+      widget,
+      activity,
+      previewSecond: 30,
+      exportStartSecond: 10,
+      exportEndSecond: 40,
+      globalScale: 1,
+    })
+
+    expect(model.valueText).toBe('0:00:20/0:00:30')
+  })
+
   test.each(['center', 'right'])('applies %s point alignment to time through the standard intrinsic layout', (contentAlignment) => {
     const model = buildMetricWidgetPreviewModel({
       widget: {

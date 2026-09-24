@@ -827,6 +827,7 @@ pub fn trim_activity(
             Vec::new()
         },
         full_activity_distance: last_finite(&activity.distance),
+        full_activity_duration_seconds: duration,
         lap_number: if requirements.lap_number {
             lap_number
         } else {

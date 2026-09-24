@@ -677,6 +677,7 @@
     "activityStart": "aktivity",
     "exportStart": "exportu",
     "hundredths": "Setiny sekundy",
+    "showTotal": "Zobrazit celkový čas",
     "timeFormat12h": "Pouze čas (12h)",
     "timeFormat12hWithSeconds": "Pouze čas (12h se sekundami)",
     "timeFormat24h": "Pouze čas (24h)",

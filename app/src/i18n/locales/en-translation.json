@@ -677,6 +677,7 @@
     "activityStart": "Activity",
     "exportStart": "Export",
     "hundredths": "Hundredths",
+    "showTotal": "Show Total",
     "timeFormat12h": "Time only (12h)",
     "timeFormat12hWithSeconds": "Time only (12h with seconds)",
     "timeFormat24h": "Time only (24h)",

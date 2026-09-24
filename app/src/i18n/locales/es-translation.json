@@ -677,6 +677,7 @@
     "activityStart": "la actividad",
     "exportStart": "la exportación",
     "hundredths": "Centésimas de segundo",
+    "showTotal": "Mostrar total",
     "timeFormat12h": "Solo hora (12h)",
     "timeFormat12hWithSeconds": "Solo hora (12h con segundos)",
     "timeFormat24h": "Solo hora (24h)",

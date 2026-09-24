@@ -8,7 +8,16 @@ import { useFontMetrics } from '@/features/widget-preview/shared/useFontMetrics'
 
 const EMPTY_PREVIEW_MODELS = {}
 
-function buildPreviewModels({ renderedWidgets, category, activity, previewSecond, lapLogPreparations, globalScale, exportStartSecond }) {
+function buildPreviewModels({
+  renderedWidgets,
+  category,
+  activity,
+  previewSecond,
+  lapLogPreparations,
+  globalScale,
+  exportStartSecond,
+  exportEndSecond,
+}) {
   const models = {}
 
   for (const widget of renderedWidgets) {
@@ -18,7 +27,7 @@ function buildPreviewModels({ renderedWidgets, category, activity, previewSecond
       category === 'values'
         ? widget.data.display_type === 'lap_timer'
           ? buildLapTimerPreviewModel({ widget, activity, previewSecond, lapLogPreparation: lapLogPreparations[widget.id] })
-          : buildMetricWidgetPreviewModel({ widget, activity, previewSecond, globalScale, exportStartSecond })
+          : buildMetricWidgetPreviewModel({ widget, activity, previewSecond, globalScale, exportStartSecond, exportEndSecond })
         : buildTextWidgetPreviewModel({ widget })
 
     if (model) models[widget.id] = model
@@ -55,10 +64,11 @@ function buildFontRequests(renderedWidgets) {
  * @param {object|null} params.activity - Parsed activity used by metric models.
  * @param {number} params.previewSecond - Canonical preview timestamp.
  * @param {number} params.exportStartSecond - Canonical timeline second where the current export begins.
+ * @param {number} params.exportEndSecond - Canonical timeline second where the current export ends.
  * @param {number} params.globalScale - Scale applied to intrinsic widget previews.
  * @returns {{ metricPreviewModels: object, textPreviewModels: object }} Models keyed by widget id.
  */
-export default function useOverlayPreviewModels({ renderedWidgets, activity, previewSecond, exportStartSecond, globalScale }) {
+export default function useOverlayPreviewModels({ renderedWidgets, activity, previewSecond, exportStartSecond, exportEndSecond, globalScale }) {
   const fontRequests = useMemo(() => buildFontRequests(renderedWidgets), [renderedWidgets])
   const fontMetricsVersion = useFontMetrics(fontRequests)
   const lapLogPreparations = useMemo(
@@ -78,10 +88,11 @@ export default function useOverlayPreviewModels({ renderedWidgets, activity, pre
         lapLogPreparations,
         globalScale,
         exportStartSecond,
+        exportEndSecond,
       }),
     // Font readiness changes canvas measurements without changing the model inputs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activity, exportStartSecond, fontMetricsVersion, globalScale, lapLogPreparations, previewSecond, renderedWidgets],
+    [activity, exportStartSecond, exportEndSecond, fontMetricsVersion, globalScale, lapLogPreparations, previewSecond, renderedWidgets],
   )
 
   const textPreviewModels = useMemo(

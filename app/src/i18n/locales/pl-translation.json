@@ -677,6 +677,7 @@
     "activityStart": "aktywności",
     "exportStart": "eksportu",
     "hundredths": "Setne sekundy",
+    "showTotal": "Pokaż całkowity czas",
     "timeFormat12h": "Tylko czas (12h)",
     "timeFormat12hWithSeconds": "Tylko czas (12h z sekundami)",
     "timeFormat24h": "Tylko czas (24h)",

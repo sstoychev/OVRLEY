@@ -247,6 +247,7 @@ fn dense_speed_activity(speed: Vec<Option<f64>>) -> DenseActivityReport {
         frame_distance_progress: vec![Some(0.0); frame_count],
         full_activity_distance: None,
         full_activity_total_ascent: None,
+        full_activity_duration_seconds: 0.0,
         series,
     }
 }

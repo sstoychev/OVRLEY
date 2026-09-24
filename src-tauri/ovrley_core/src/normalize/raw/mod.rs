@@ -211,6 +211,8 @@ pub struct ValueConfig {
     #[serde(default)]
     pub show_hundredths: Option<bool>,
     #[serde(default)]
+    pub show_total: Option<bool>,
+    #[serde(default)]
     pub decimal_rounding: Option<i32>,
     #[serde(default)]
     pub decimals: Option<usize>,

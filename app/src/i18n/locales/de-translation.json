@@ -677,6 +677,7 @@
     "activityStart": "der Aktivität",
     "exportStart": "des Exports",
     "hundredths": "Hundertstel",
+    "showTotal": "Gesamtzeit anzeigen",
     "timeFormat12h": "Nur Zeit (12h)",
     "timeFormat12hWithSeconds": "Nur Zeit (12h mit Sekunden)",
     "timeFormat24h": "Nur Zeit (24h)",

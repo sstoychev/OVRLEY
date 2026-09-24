@@ -677,6 +677,7 @@
     "activityStart": "Etkinliğin başlangıcından itibaren",
     "exportStart": "Dışa aktarmanın başlangıcından itibaren",
     "hundredths": "Saniyenin yüzde biri",
+    "showTotal": "Toplamı göster",
     "timeFormat12h": "Yalnızca saat (12h)",
     "timeFormat12hWithSeconds": "Yalnızca saat (12h saniyeli)",
     "timeFormat24h": "Yalnızca saat (24h)",

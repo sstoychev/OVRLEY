@@ -677,6 +677,7 @@
     "activityStart": "활동 시작",
     "exportStart": "내보내기 시작",
     "hundredths": "1/100초",
+    "showTotal": "총 시간 표시",
     "timeFormat12h": "시간만 (12h)",
     "timeFormat12hWithSeconds": "시간만 (12h 초 포함)",
     "timeFormat24h": "시간만 (24h)",

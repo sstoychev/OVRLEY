@@ -70,6 +70,13 @@ export default function TimeWidgetEditor({ widget, updateWidgetData, updateWidge
                   onCheckedChange={(showHundredths) => updateWidgetData(widget.id, { show_hundredths: showHundredths })}
                 />
               </div>
+              <div className="flex items-center justify-between gap-2 pl-1 pt-2 pb-2">
+                <Label className="pt-1 text-[9px] text-muted-foreground uppercase font-bold">{t('widget-editor.showTotal', 'Show Total')}</Label>
+                <ToggleField
+                  checked={widget.data.show_total}
+                  onCheckedChange={(showTotal) => updateWidgetData(widget.id, { show_total: showTotal })}
+                />
+              </div>
             </div>
           </>
         ) : (

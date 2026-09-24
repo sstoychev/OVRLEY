@@ -622,6 +622,9 @@ fn render_frame_to_surface(
                             activity_seconds: activity_elapsed_seconds,
                             export_seconds: activity_elapsed_seconds
                                 - prepared_assets.export_start_seconds,
+                            activity_total_seconds: dense_activity.full_activity_duration_seconds,
+                            export_total_seconds: prepared_assets.scene.end
+                                - prepared_assets.scene.start,
                         }),
                     })?;
                 }
