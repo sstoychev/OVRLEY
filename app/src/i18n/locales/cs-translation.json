@@ -38,7 +38,8 @@
     "whiteBackground": "Bílé pozadí",
     "widgets": "Widgety",
     "zoomIn": "Přiblížit",
-    "zoomOut": "Oddálit"
+    "zoomOut": "Oddálit",
+    "copyError": "Kopírovat chybu"
   },
   "app-update": {
     "close": "Zavřít",

@@ -38,7 +38,8 @@
     "whiteBackground": "Sfondo bianco",
     "widgets": "Widget",
     "zoomIn": "Ingrandisci",
-    "zoomOut": "Riduci"
+    "zoomOut": "Riduci",
+    "copyError": "Copia errore"
   },
   "app-update": {
     "close": "Chiudi",

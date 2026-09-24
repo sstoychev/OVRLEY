@@ -62,6 +62,17 @@ export function matchKeyboardShortcut(event, scope) {
 const NATIVE_EDITING_KEYS = new Set(['a', 'c', 'v', 'x', 'y', 'z'])
 
 /**
+ * Reports whether the user has selected page text, which native copy should own.
+ *
+ * @returns {boolean} Whether a non-collapsed document text selection exists.
+ */
+export function hasPageTextSelection() {
+  if (typeof window === 'undefined') return false
+  const selection = window.getSelection()
+  return Boolean(selection && !selection.isCollapsed && selection.toString().length > 0)
+}
+
+/**
  * Checks whether a form field should retain a matched shortcut.
  *
  * @param {KeyboardEvent} event - Keyboard event to inspect.

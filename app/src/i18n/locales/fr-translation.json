@@ -38,7 +38,8 @@
     "whiteBackground": "Arrière-plan blanc",
     "widgets": "Widgets",
     "zoomIn": "Zoom avant",
-    "zoomOut": "Zoom arrière"
+    "zoomOut": "Zoom arrière",
+    "copyError": "Copier l’erreur"
   },
   "app-update": {
     "close": "Fermer",

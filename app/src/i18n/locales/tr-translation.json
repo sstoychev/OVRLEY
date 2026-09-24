@@ -38,7 +38,8 @@
     "whiteBackground": "Beyaz arka plan",
     "widgets": "Widget'lar",
     "zoomIn": "Yakınlaştır",
-    "zoomOut": "Uzaklaştır"
+    "zoomOut": "Uzaklaştır",
+    "copyError": "Hatayı kopyala"
   },
   "app-update": {
     "close": "Kapat",

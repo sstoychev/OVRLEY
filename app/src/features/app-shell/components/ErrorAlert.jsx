@@ -4,7 +4,7 @@
 
 import React from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle, X } from 'lucide-react'
+import { AlertCircle, Copy, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import useStore from '@/store/useStore'
 import { useShallow } from 'zustand/react/shallow'
@@ -29,10 +29,22 @@ function ErrorAlert() {
 
   return (
     <div className="fixed top-4 right-4 z-100 max-w-md animate-in fade-in slide-in-from-top-4 duration-300">
-      <Alert variant="destructive" className="relative pr-12 shadow-lg border-2">
+      <Alert variant="destructive" className="relative pr-20 shadow-lg border-2">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>{t('app-shell.errorRenderingVideo', 'Error Rendering Video')}</AlertTitle>
-        <AlertDescription className="text-sm opacity-90 select-text whitespace-pre-wrap">{errorMessage}</AlertDescription>
+        <AlertDescription className="max-h-[70vh] overflow-y-auto text-sm opacity-90 select-text whitespace-pre-wrap break-words">
+          {errorMessage}
+        </AlertDescription>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-10 h-8 w-8 hover:bg-destructive-foreground/10"
+          onClick={() => navigator.clipboard.writeText(errorMessage).catch((error) => console.error('Failed to copy error message:', error))}
+          aria-label={t('app-shell.copyError', 'Copy error')}
+          title={t('app-shell.copyError', 'Copy error')}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 hover:bg-destructive-foreground/10" onClick={clearError}>
           <X className="h-4 w-4" />
         </Button>

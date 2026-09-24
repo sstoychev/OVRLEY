@@ -38,7 +38,8 @@
     "whiteBackground": "Vit bakgrund",
     "widgets": "Widgetar",
     "zoomIn": "Zooma in",
-    "zoomOut": "Zooma ut"
+    "zoomOut": "Zooma ut",
+    "copyError": "Kopiera fel"
   },
   "app-update": {
     "close": "Stäng",

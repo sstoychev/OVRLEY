@@ -38,7 +38,8 @@
     "whiteBackground": "Белый фон",
     "widgets": "Виджеты",
     "zoomIn": "Увеличить масштаб",
-    "zoomOut": "Уменьшить масштаб"
+    "zoomOut": "Уменьшить масштаб",
+    "copyError": "Копировать ошибку"
   },
   "app-update": {
     "close": "Закрыть",

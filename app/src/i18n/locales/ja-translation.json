@@ -38,7 +38,8 @@
     "whiteBackground": "白い背景",
     "widgets": "ウィジェット",
     "zoomIn": "ズームイン",
-    "zoomOut": "ズームアウト"
+    "zoomOut": "ズームアウト",
+    "copyError": "エラーをコピー"
   },
   "app-update": {
     "close": "閉じる",
