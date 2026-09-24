@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { isMp4Codec } from '../utils/codecUtils'
+import { formatFps, formatTime, isMp4Codec } from '../utils/codecUtils'
 import useBatchRenderWorkflow from '../hooks/useBatchRenderWorkflow'
 import { useTranslation } from 'react-i18next'
 
@@ -269,14 +269,24 @@ export default function BatchRenderDialog() {
                       ) : null}
                       {item.status === 'error' && item.error ? <p className="truncate text-[10px] text-red-500">{item.error}</p> : null}
                       {isActive && currentItemProgress ? (
-                        <Progress
-                          value={
-                            currentItemProgress.current && currentItemProgress.total
-                              ? (currentItemProgress.current / currentItemProgress.total) * 100
-                              : 0
-                          }
-                          className="mt-1 h-1"
-                        />
+                        <>
+                          <Progress
+                            value={
+                              currentItemProgress.current && currentItemProgress.total
+                                ? (currentItemProgress.current / currentItemProgress.total) * 100
+                                : 0
+                            }
+                            className="mt-1 h-1"
+                          />
+                          <p className="mt-1 flex gap-3 text-[10px] tabular-nums text-muted-foreground">
+                            <span>
+                              {t('render-video.renderFps', 'Render FPS')}: {formatFps(currentItemProgress.rendering_fps)}
+                            </span>
+                            <span>
+                              {t('render-video.estRemaining', 'Est. Remaining')}: {formatTime(currentItemProgress.estimated_seconds_remaining)}
+                            </span>
+                          </p>
+                        </>
                       ) : null}
                     </div>
                     <Label className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
