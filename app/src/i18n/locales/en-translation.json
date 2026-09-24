@@ -39,7 +39,8 @@
     "whiteBackground": "White background",
     "widgets": "Widgets",
     "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out"
+    "zoomOut": "Zoom out",
+    "language": "Language"
   },
   "app-update": {
     "close": "Close",
@@ -188,7 +189,8 @@
     "videoRequired": "Video required",
     "videoResolutionMismatch": "Video resolution mismatch",
     "videoResolutionMismatchMessage": "Overlay resolution {{overlayResolution}} must match imported video ({{videoResolution}}).",
-    "widgetUpdateRate": "Widget Update Rate"
+    "widgetUpdateRate": "Widget Update Rate",
+    "checkingOverlap": "Checking overlap..."
   },
   "keyboard-shortcuts": {
     "generalCommands": "General commands",
@@ -425,7 +427,8 @@
     "videoRequired": "A video is required to mark a landmark",
     "videoRequiredForSync": "A video is required for Landmark Sync",
     "yourLandmarks": "Video Landmarks",
-    "setLocationInMap": "Set location"
+    "setLocationInMap": "Set location",
+    "mapStyle": "Map style"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -700,6 +703,9 @@
     "unit": "Unit",
     "units": "Units",
     "valueColor": "Value Color",
-    "width": "Width"
+    "width": "Width",
+    "contentAlignment": "Content Alignment",
+    "dimensions": "Dimensions",
+    "horizontalAnchor": "Horizontal Anchor"
   }
 }

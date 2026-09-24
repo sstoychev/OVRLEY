@@ -38,7 +38,9 @@
     "whiteBackground": "Sfondo bianco",
     "widgets": "Widget",
     "zoomIn": "Ingrandisci",
-    "zoomOut": "Riduci"
+    "zoomOut": "Riduci",
+    "copyError": "Copia errore",
+    "language": "Lingua"
   },
   "app-update": {
     "close": "Chiudi",
@@ -176,7 +178,19 @@
     "videoRequired": "Video richiesto",
     "videoResolutionMismatch": "Risoluzione video diversa",
     "videoResolutionMismatchMessage": "La risoluzione della sovrapposizione {{overlayResolution}} deve corrispondere a quella del video importato ({{videoResolution}}).",
-    "widgetUpdateRate": "Frequenza aggiornamento widget"
+    "widgetUpdateRate": "Frequenza aggiornamento widget",
+    "activityOverlay": "Sovrapposizione attività",
+    "batch": "Batch",
+    "batchRender": "Rendering in batch",
+    "checkingOverlap": "Controllo sovrapposizione temporale...",
+    "chooseFolder": "Scegli cartella...",
+    "clearQueue": "Svuota coda",
+    "close": "Chiudi",
+    "noVideosQueued": "Scegli una cartella di video da mettere in coda per il rendering in batch.",
+    "outputFolder": "Cartella di output",
+    "rendering": "Rendering in corso...",
+    "startBatchRender": "Avvia rendering in batch",
+    "videoFolder": "Cartella video"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Comandi generali",
@@ -413,7 +427,8 @@
     "videoRequired": "Serve un video per segnare un riferimento",
     "videoRequiredForSync": "Serve un video per sincronizzare i riferimenti",
     "yourLandmarks": "I tuoi segni video",
-    "setLocationInMap": "Imposta posizione"
+    "setLocationInMap": "Imposta posizione",
+    "mapStyle": "Stile mappa"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Unità",
     "units": "Unità",
     "valueColor": "Colore valore",
-    "width": "Larghezza"
+    "width": "Larghezza",
+    "contentAlignment": "Allineamento contenuto",
+    "dimensions": "Dimensioni",
+    "horizontalAnchor": "Ancoraggio orizzontale"
   }
 }

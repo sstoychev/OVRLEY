@@ -38,7 +38,9 @@
     "whiteBackground": "Белый фон",
     "widgets": "Виджеты",
     "zoomIn": "Увеличить масштаб",
-    "zoomOut": "Уменьшить масштаб"
+    "zoomOut": "Уменьшить масштаб",
+    "copyError": "Копировать ошибку",
+    "language": "Язык"
   },
   "app-update": {
     "close": "Закрыть",
@@ -176,7 +178,19 @@
     "videoRequired": "Требуется видео",
     "videoResolutionMismatch": "Несоответствие разрешения видео",
     "videoResolutionMismatchMessage": "Разрешение оверлея {{overlayResolution}} должно совпадать с разрешением импортированного видео ({{videoResolution}}).",
-    "widgetUpdateRate": "Частота обновления виджетов"
+    "widgetUpdateRate": "Частота обновления виджетов",
+    "activityOverlay": "Оверлей активности",
+    "batch": "Пакет",
+    "batchRender": "Пакетный рендеринг",
+    "checkingOverlap": "Проверка пересечения...",
+    "chooseFolder": "Выбрать папку...",
+    "clearQueue": "Очистить очередь",
+    "close": "Закрыть",
+    "noVideosQueued": "Выберите папку с видео, чтобы поставить их в очередь пакетного рендеринга.",
+    "outputFolder": "Папка вывода",
+    "rendering": "Рендеринг...",
+    "startBatchRender": "Начать пакетный рендеринг",
+    "videoFolder": "Папка с видео"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Общие команды",
@@ -413,7 +427,8 @@
     "videoRequired": "Для отметки ориентира требуется видео",
     "videoRequiredForSync": "Для синхронизации по ориентирам требуется видео",
     "yourLandmarks": "Метки видео",
-    "setLocationInMap": "Задать место"
+    "setLocationInMap": "Задать место",
+    "mapStyle": "Стиль карты"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Единица",
     "units": "Единицы",
     "valueColor": "Цвет значения",
-    "width": "Ширина"
+    "width": "Ширина",
+    "contentAlignment": "Выравнивание содержимого",
+    "dimensions": "Размеры",
+    "horizontalAnchor": "Горизонтальная привязка"
   }
 }

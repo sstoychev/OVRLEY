@@ -38,7 +38,9 @@
     "whiteBackground": "Vit bakgrund",
     "widgets": "Widgetar",
     "zoomIn": "Zooma in",
-    "zoomOut": "Zooma ut"
+    "zoomOut": "Zooma ut",
+    "copyError": "Kopiera fel",
+    "language": "Språk"
   },
   "app-update": {
     "close": "Stäng",
@@ -176,7 +178,19 @@
     "videoRequired": "Video krävs",
     "videoResolutionMismatch": "Videoupplösningen stämmer inte",
     "videoResolutionMismatchMessage": "Överläggets upplösning {{overlayResolution}} måste matcha den importerade videons ({{videoResolution}}).",
-    "widgetUpdateRate": "Uppdateringsfrekvens för widgetar"
+    "widgetUpdateRate": "Uppdateringsfrekvens för widgetar",
+    "activityOverlay": "Aktivitetsöverlägg",
+    "batch": "Batch",
+    "batchRender": "Batchrendering",
+    "checkingOverlap": "Kontrollerar överlappning...",
+    "chooseFolder": "Välj mapp...",
+    "clearQueue": "Töm kö",
+    "close": "Stäng",
+    "noVideosQueued": "Välj en videomapp för att köa videor för batchrendering.",
+    "outputFolder": "Utdatamapp",
+    "rendering": "Renderar...",
+    "startBatchRender": "Starta batchrendering",
+    "videoFolder": "Videomapp"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Allmänna kommandon",
@@ -413,7 +427,8 @@
     "videoRequired": "En video krävs för att markera ett riktmärke",
     "videoRequiredForSync": "En video krävs för att synkronisera riktmärken",
     "yourLandmarks": "Dina videoriktmärken",
-    "setLocationInMap": "Ange plats"
+    "setLocationInMap": "Ange plats",
+    "mapStyle": "Kartstil"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Enhet",
     "units": "Enheter",
     "valueColor": "Värdefärg",
-    "width": "Bredd"
+    "width": "Bredd",
+    "contentAlignment": "Innehållsjustering",
+    "dimensions": "Mått",
+    "horizontalAnchor": "Horisontell förankring"
   }
 }

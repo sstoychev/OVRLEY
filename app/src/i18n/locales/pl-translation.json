@@ -38,7 +38,9 @@
     "whiteBackground": "Białe tło",
     "widgets": "Widżety",
     "zoomIn": "Powiększ",
-    "zoomOut": "Pomniejsz"
+    "zoomOut": "Pomniejsz",
+    "copyError": "Kopiuj błąd",
+    "language": "Język"
   },
   "app-update": {
     "close": "Zamknij",
@@ -176,7 +178,19 @@
     "videoRequired": "Wymagane wideo",
     "videoResolutionMismatch": "Niezgodność rozdzielczości wideo",
     "videoResolutionMismatchMessage": "Rozdzielczość nakładki {{overlayResolution}} musi być zgodna z zaimportowanym wideo ({{videoResolution}}).",
-    "widgetUpdateRate": "Częstotliwość aktualizacji widżetów"
+    "widgetUpdateRate": "Częstotliwość aktualizacji widżetów",
+    "activityOverlay": "Nakładka aktywności",
+    "batch": "Wsadowo",
+    "batchRender": "Renderowanie wsadowe",
+    "checkingOverlap": "Sprawdzanie nakładania się...",
+    "chooseFolder": "Wybierz folder...",
+    "clearQueue": "Wyczyść kolejkę",
+    "close": "Zamknij",
+    "noVideosQueued": "Wybierz folder z filmami, aby dodać je do kolejki renderowania wsadowego.",
+    "outputFolder": "Folder wyjściowy",
+    "rendering": "Renderowanie...",
+    "startBatchRender": "Rozpocznij renderowanie wsadowe",
+    "videoFolder": "Folder z filmami"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Polecenia ogólne",
@@ -413,7 +427,8 @@
     "videoRequired": "Do oznaczenia punktu odniesienia potrzebne jest wideo",
     "videoRequiredForSync": "Wideo do sync znaczników",
     "yourLandmarks": "Twoje znaczniki",
-    "setLocationInMap": "Ustaw lokalizację"
+    "setLocationInMap": "Ustaw lokalizację",
+    "mapStyle": "Styl mapy"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Jednostka",
     "units": "Jednostki",
     "valueColor": "Kolor wartości",
-    "width": "Szerokość"
+    "width": "Szerokość",
+    "contentAlignment": "Wyrównanie zawartości",
+    "dimensions": "Wymiary",
+    "horizontalAnchor": "Kotwica pozioma"
   }
 }

@@ -38,7 +38,9 @@
     "whiteBackground": "Weißer Hintergrund",
     "widgets": "Widgets",
     "zoomIn": "Hereinzoomen",
-    "zoomOut": "Herauszoomen"
+    "zoomOut": "Herauszoomen",
+    "copyError": "Fehler kopieren",
+    "language": "Sprache"
   },
   "app-update": {
     "close": "Schließen",
@@ -176,7 +178,19 @@
     "videoRequired": "Video erforderlich",
     "videoResolutionMismatch": "Abweichende Videoauflösung",
     "videoResolutionMismatchMessage": "Die Overlay-Auflösung {{overlayResolution}} muss mit dem importierten Video ({{videoResolution}}) übereinstimmen.",
-    "widgetUpdateRate": "Widget-Aktualisierungsrate"
+    "widgetUpdateRate": "Widget-Aktualisierungsrate",
+    "activityOverlay": "Aktivitäts-Overlay",
+    "batch": "Stapel",
+    "batchRender": "Stapel-Rendering",
+    "checkingOverlap": "Überschneidung wird geprüft...",
+    "chooseFolder": "Ordner auswählen...",
+    "clearQueue": "Warteschlange leeren",
+    "close": "Schließen",
+    "noVideosQueued": "Wählen Sie einen Videoordner, um Videos für das Stapel-Rendering einzureihen.",
+    "outputFolder": "Ausgabeordner",
+    "rendering": "Wird gerendert...",
+    "startBatchRender": "Stapel-Rendering starten",
+    "videoFolder": "Videoordner"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Allgemeine Befehle",
@@ -413,7 +427,8 @@
     "videoRequired": "Zum Setzen einer Markierung ist ein Video erforderlich",
     "videoRequiredForSync": "Video für Sync nötig",
     "yourLandmarks": "Videomarken",
-    "setLocationInMap": "Standort festlegen"
+    "setLocationInMap": "Standort festlegen",
+    "mapStyle": "Kartenstil"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Einheit",
     "units": "Einheiten",
     "valueColor": "Wertfarbe",
-    "width": "Breite"
+    "width": "Breite",
+    "contentAlignment": "Inhaltsausrichtung",
+    "dimensions": "Abmessungen",
+    "horizontalAnchor": "Horizontaler Anker"
   }
 }

@@ -38,7 +38,9 @@
     "whiteBackground": "白い背景",
     "widgets": "ウィジェット",
     "zoomIn": "ズームイン",
-    "zoomOut": "ズームアウト"
+    "zoomOut": "ズームアウト",
+    "copyError": "エラーをコピー",
+    "language": "言語"
   },
   "app-update": {
     "close": "閉じる",
@@ -176,7 +178,19 @@
     "videoRequired": "動画が必要です",
     "videoResolutionMismatch": "動画の解像度が一致しません",
     "videoResolutionMismatchMessage": "オーバーレイの解像度 {{overlayResolution}} は、読み込んだ動画の解像度 ({{videoResolution}}) と一致している必要があります。",
-    "widgetUpdateRate": "ウィジェット更新頻度"
+    "widgetUpdateRate": "ウィジェット更新頻度",
+    "activityOverlay": "アクティビティオーバーレイ",
+    "batch": "一括",
+    "batchRender": "一括レンダリング",
+    "checkingOverlap": "重なりを確認中...",
+    "chooseFolder": "フォルダーを選択...",
+    "clearQueue": "キューをクリア",
+    "close": "閉じる",
+    "noVideosQueued": "一括レンダリングする動画のフォルダーを選択してください。",
+    "outputFolder": "出力フォルダー",
+    "rendering": "レンダリング中...",
+    "startBatchRender": "一括レンダリングを開始",
+    "videoFolder": "動画フォルダー"
   },
   "keyboard-shortcuts": {
     "generalCommands": "一般コマンド",
@@ -413,7 +427,8 @@
     "videoRequired": "基準点をマークするには動画が必要です",
     "videoRequiredForSync": "基準点同期には動画が必要です",
     "yourLandmarks": "動画の基準点",
-    "setLocationInMap": "位置を設定"
+    "setLocationInMap": "位置を設定",
+    "mapStyle": "地図スタイル"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "単位",
     "units": "単位",
     "valueColor": "値の色",
-    "width": "幅"
+    "width": "幅",
+    "contentAlignment": "コンテンツの配置",
+    "dimensions": "サイズ",
+    "horizontalAnchor": "水平アンカー"
   }
 }

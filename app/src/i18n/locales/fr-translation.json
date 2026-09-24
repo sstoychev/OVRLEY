@@ -38,7 +38,9 @@
     "whiteBackground": "Arrière-plan blanc",
     "widgets": "Widgets",
     "zoomIn": "Zoom avant",
-    "zoomOut": "Zoom arrière"
+    "zoomOut": "Zoom arrière",
+    "copyError": "Copier l’erreur",
+    "language": "Langue"
   },
   "app-update": {
     "close": "Fermer",
@@ -176,7 +178,19 @@
     "videoRequired": "Vidéo requise",
     "videoResolutionMismatch": "Résolution vidéo incompatible",
     "videoResolutionMismatchMessage": "La résolution de la superposition {{overlayResolution}} doit correspondre à celle de la vidéo importée ({{videoResolution}}).",
-    "widgetUpdateRate": "Fréquence de mise à jour des widgets"
+    "widgetUpdateRate": "Fréquence de mise à jour des widgets",
+    "activityOverlay": "Superposition d’activité",
+    "batch": "Lot",
+    "batchRender": "Rendu par lots",
+    "checkingOverlap": "Vérification du chevauchement...",
+    "chooseFolder": "Choisir un dossier...",
+    "clearQueue": "Vider la file",
+    "close": "Fermer",
+    "noVideosQueued": "Choisissez un dossier de vidéos à mettre en file pour le rendu par lots.",
+    "outputFolder": "Dossier de sortie",
+    "rendering": "Rendu en cours...",
+    "startBatchRender": "Lancer le rendu par lots",
+    "videoFolder": "Dossier vidéo"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Commandes générales",
@@ -413,7 +427,8 @@
     "videoRequired": "Une vidéo est nécessaire pour marquer un repère",
     "videoRequiredForSync": "Une vidéo est nécessaire pour synchroniser les repères",
     "yourLandmarks": "Vos repères vidéo",
-    "setLocationInMap": "Définir lieu"
+    "setLocationInMap": "Définir lieu",
+    "mapStyle": "Style de carte"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Unité",
     "units": "Unités",
     "valueColor": "Couleur valeur",
-    "width": "Largeur"
+    "width": "Largeur",
+    "contentAlignment": "Alignement du contenu",
+    "dimensions": "Dimensions",
+    "horizontalAnchor": "Ancrage horizontal"
   }
 }

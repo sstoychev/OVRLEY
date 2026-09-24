@@ -38,7 +38,9 @@
     "whiteBackground": "Bílé pozadí",
     "widgets": "Widgety",
     "zoomIn": "Přiblížit",
-    "zoomOut": "Oddálit"
+    "zoomOut": "Oddálit",
+    "copyError": "Kopírovat chybu",
+    "language": "Jazyk"
   },
   "app-update": {
     "close": "Zavřít",
@@ -176,7 +178,19 @@
     "videoRequired": "Vyžaduje video",
     "videoResolutionMismatch": "Neshoda rozlišení videa",
     "videoResolutionMismatchMessage": "Rozlišení grafiky ({{overlayResolution}}) se musí shodovat s rozlišením importovaného videa ({{videoResolution}}).",
-    "widgetUpdateRate": "Frekvence aktualizace widgetů"
+    "widgetUpdateRate": "Frekvence aktualizace widgetů",
+    "activityOverlay": "Grafika aktivity",
+    "batch": "Dávka",
+    "batchRender": "Dávkové vykreslování",
+    "checkingOverlap": "Kontrola překryvu...",
+    "chooseFolder": "Vybrat složku...",
+    "clearQueue": "Vymazat frontu",
+    "close": "Zavřít",
+    "noVideosQueued": "Vyberte složku s videi a zařaďte je do fronty dávkového vykreslování.",
+    "outputFolder": "Výstupní složka",
+    "rendering": "Vykreslování...",
+    "startBatchRender": "Spustit dávkové vykreslování",
+    "videoFolder": "Složka s videi"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Obecné příkazy",
@@ -413,7 +427,8 @@
     "videoRequired": "Pro označení orientačního bodu je potřeba video",
     "videoRequiredForSync": "Video pro sync značek nutné",
     "yourLandmarks": "Vaše orientační body",
-    "setLocationInMap": "Nastavit polohu"
+    "setLocationInMap": "Nastavit polohu",
+    "mapStyle": "Styl mapy"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Jednotka",
     "units": "Jednotky",
     "valueColor": "Barva hodnoty",
-    "width": "Šířka"
+    "width": "Šířka",
+    "contentAlignment": "Zarovnání obsahu",
+    "dimensions": "Rozměry",
+    "horizontalAnchor": "Vodorovné ukotvení"
   }
 }

@@ -38,7 +38,9 @@
     "whiteBackground": "Beyaz arka plan",
     "widgets": "Widget'lar",
     "zoomIn": "Yakınlaştır",
-    "zoomOut": "Uzaklaştır"
+    "zoomOut": "Uzaklaştır",
+    "copyError": "Hatayı kopyala",
+    "language": "Dil"
   },
   "app-update": {
     "close": "Kapat",
@@ -176,7 +178,19 @@
     "videoRequired": "Video gerekli",
     "videoResolutionMismatch": "Video çözünürlüğü eşleşmiyor",
     "videoResolutionMismatchMessage": "Kaplama çözünürlüğü {{overlayResolution}}, içe aktarılan videonun çözünürlüğüyle ({{videoResolution}}) eşleşmelidir.",
-    "widgetUpdateRate": "Widget güncelleme hızı"
+    "widgetUpdateRate": "Widget güncelleme hızı",
+    "activityOverlay": "Etkinlik kaplaması",
+    "batch": "Toplu",
+    "batchRender": "Toplu işleme",
+    "checkingOverlap": "Çakışma kontrol ediliyor...",
+    "chooseFolder": "Klasör seç...",
+    "clearQueue": "Kuyruğu temizle",
+    "close": "Kapat",
+    "noVideosQueued": "Toplu işleme için videoları sıraya almak üzere bir video klasörü seçin.",
+    "outputFolder": "Çıktı klasörü",
+    "rendering": "İşleniyor...",
+    "startBatchRender": "Toplu işlemeyi başlat",
+    "videoFolder": "Video klasörü"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Genel komutlar",
@@ -413,7 +427,8 @@
     "videoRequired": "İşaret noktası eklemek için video gerekir",
     "videoRequiredForSync": "İşaret noktalarını eşzamanlamak için video gerekir",
     "yourLandmarks": "Video işaretleri",
-    "setLocationInMap": "Konumu ayarla"
+    "setLocationInMap": "Konumu ayarla",
+    "mapStyle": "Harita stili"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Birim",
     "units": "Birimler",
     "valueColor": "Değer rengi",
-    "width": "Genişlik"
+    "width": "Genişlik",
+    "contentAlignment": "İçerik hizalama",
+    "dimensions": "Boyutlar",
+    "horizontalAnchor": "Yatay bağlantı noktası"
   }
 }

@@ -38,7 +38,9 @@
     "whiteBackground": "白色背景",
     "widgets": "小部件",
     "zoomIn": "放大",
-    "zoomOut": "缩小"
+    "zoomOut": "缩小",
+    "copyError": "复制错误",
+    "language": "语言"
   },
   "app-update": {
     "close": "关闭",
@@ -176,7 +178,19 @@
     "videoRequired": "需要视频",
     "videoResolutionMismatch": "视频分辨率不匹配",
     "videoResolutionMismatchMessage": "叠加层分辨率 {{overlayResolution}} 必须与导入视频的分辨率 ({{videoResolution}}) 匹配。",
-    "widgetUpdateRate": "小部件更新频率"
+    "widgetUpdateRate": "小部件更新频率",
+    "activityOverlay": "活动叠加层",
+    "batch": "批量",
+    "batchRender": "批量渲染",
+    "checkingOverlap": "正在检查重叠...",
+    "chooseFolder": "选择文件夹...",
+    "clearQueue": "清空队列",
+    "close": "关闭",
+    "noVideosQueued": "选择视频文件夹，将视频加入批量渲染队列。",
+    "outputFolder": "输出文件夹",
+    "rendering": "正在渲染...",
+    "startBatchRender": "开始批量渲染",
+    "videoFolder": "视频文件夹"
   },
   "keyboard-shortcuts": {
     "generalCommands": "常规命令",
@@ -413,7 +427,8 @@
     "videoRequired": "需要视频才能标记基准点",
     "videoRequiredForSync": "需要视频才能同步基准点",
     "yourLandmarks": "你的视频基准点",
-    "setLocationInMap": "设置位置"
+    "setLocationInMap": "设置位置",
+    "mapStyle": "地图样式"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "单位",
     "units": "单位",
     "valueColor": "数值颜色",
-    "width": "宽度"
+    "width": "宽度",
+    "contentAlignment": "内容对齐",
+    "dimensions": "尺寸",
+    "horizontalAnchor": "水平锚点"
   }
 }

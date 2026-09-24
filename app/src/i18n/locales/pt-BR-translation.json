@@ -38,7 +38,9 @@
     "whiteBackground": "Fundo branco",
     "widgets": "Widgets",
     "zoomIn": "Ampliar",
-    "zoomOut": "Reduzir"
+    "zoomOut": "Reduzir",
+    "copyError": "Copiar erro",
+    "language": "Idioma"
   },
   "app-update": {
     "close": "Fechar",
@@ -176,7 +178,19 @@
     "videoRequired": "Vídeo obrigatório",
     "videoResolutionMismatch": "Incompatibilidade de resolução do vídeo",
     "videoResolutionMismatchMessage": "A resolução da sobreposição {{overlayResolution}} deve corresponder à do vídeo importado ({{videoResolution}}).",
-    "widgetUpdateRate": "Taxa de atualização dos widgets"
+    "widgetUpdateRate": "Taxa de atualização dos widgets",
+    "activityOverlay": "Sobreposição da atividade",
+    "batch": "Lote",
+    "batchRender": "Renderização em lote",
+    "checkingOverlap": "Verificando sobreposição temporal...",
+    "chooseFolder": "Escolher pasta...",
+    "clearQueue": "Limpar fila",
+    "close": "Fechar",
+    "noVideosQueued": "Escolha uma pasta de vídeos para colocá-los na fila de renderização em lote.",
+    "outputFolder": "Pasta de saída",
+    "rendering": "Renderizando...",
+    "startBatchRender": "Iniciar renderização em lote",
+    "videoFolder": "Pasta de vídeos"
   },
   "keyboard-shortcuts": {
     "generalCommands": "Comandos gerais",
@@ -413,7 +427,8 @@
     "videoRequired": "É necessário um vídeo para marcar um ponto de referência",
     "videoRequiredForSync": "Vídeo para sync de marcas",
     "yourLandmarks": "Suas marcas",
-    "setLocationInMap": "Definir local"
+    "setLocationInMap": "Definir local",
+    "mapStyle": "Estilo do mapa"
   },
   "video-preview": {
     "aborterror": "AbortError",
@@ -688,6 +703,9 @@
     "unit": "Unidade",
     "units": "Unidades",
     "valueColor": "Cor do valor",
-    "width": "Largura"
+    "width": "Largura",
+    "contentAlignment": "Alinhamento do conteúdo",
+    "dimensions": "Dimensões",
+    "horizontalAnchor": "Âncora horizontal"
   }
 }
