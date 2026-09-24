@@ -15,7 +15,7 @@
  * @returns {object|null} Preview model with metricLayout, visualBounds, and text values, or null for non-value or boxed widgets.
  */
 
-import { formatStandardMetricDisplay, formatTimeValue, formatElapsedTimeValue } from './format'
+import { formatElapsedTimeValue, formatStandardMetricDisplay, formatTimeValue } from './format'
 import {
   getMetricWidgetLayout,
   getMetricWidgetVisualBounds,
@@ -264,10 +264,11 @@ export function buildArcGaugeInnerWidgetModel({ widget, presentationValue }) {
 /**
  * Builds the formatted layout model for an intrinsic metric widget preview.
  * @param {object} params - Widget and current activity preview state.
+ * @param {number} params.exportStartSecond - Timeline second corresponding to elapsed export time zero.
  * @param {number} params.globalScale - Global scale applied when the SVG is rendered.
  * @returns {object|null} Metric presentation model, or null for unsupported presentations.
  */
-export function buildMetricWidgetPreviewModel({ widget, activity, previewSecond, globalScale }) {
+export function buildMetricWidgetPreviewModel({ widget, activity, previewSecond, exportStartSecond, globalScale }) {
   // Guard — skip non-value widgets and gradient type (handled separately).
   if (widget.category !== 'values' || widget.type === 'gradient') return null
   // Boxed display types use their own presentation-specific preview path.

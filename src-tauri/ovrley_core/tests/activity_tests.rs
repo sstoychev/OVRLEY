@@ -24,7 +24,7 @@ fn speed_value() -> serde_json::Value {
 
 fn time_value() -> String {
     format!(
-        r##"{{"value":"time","x":0,"y":0,"font":"f","font_size":12.0,"color":"#ffffff","opacity":1.0,"show_icon":false,"icon_color":"#000000","icon_size":1.0,"icon_offset_x":0.0,"icon_offset_y":0.0,"show_units":false,"unit_color":"#000000","display_unit":"","prefix":"","suffix":"","format":"time-24","hours_offset":0,"decimals":0,"content_alignment":"left"}}"##
+        r##"{{"value":"time","x":0,"y":0,"font":"f","font_size":12.0,"color":"#ffffff","opacity":1.0,"show_icon":false,"icon_color":"#000000","icon_size":1.0,"icon_offset_x":0.0,"icon_offset_y":0.0,"show_units":false,"unit_color":"#000000","display_unit":"","prefix":"","suffix":"","time_mode":"daytime","format":"time-24","hours_offset":0,"elapsed_origin":"activity","show_hundredths":false,"decimals":0,"content_alignment":"left"}}"##
     )
 }
 
@@ -130,6 +130,52 @@ fn finalizes_raw_activity_with_idle_gap_debug_payload() {
         debug_payload["parsed_activity"]["metadata"]["inserted_idle_sample_count"],
         3
     );
+}
+
+#[test]
+fn finalizes_raw_activity_axis_g_force_and_lean_angle_samples() {
+    let raw_activity = serde_json::json!({
+        "file_name": "session.gpx",
+        "file_format": "gpx",
+        "raw_samples": [
+            {
+                "elapsed_seconds": 0.0,
+                "distance": 0.0,
+                "lap_number": 1,
+                "g_force_x": 0.1,
+                "g_force_y": -0.2,
+                "g_force_z": 0.3,
+                "lean_angle": 4.5
+            },
+            {
+                "elapsed_seconds": 1.0,
+                "distance": 12.5,
+                "lap_number": 2,
+                "g_force_x": -0.4,
+                "g_force_y": 0.5,
+                "g_force_z": -0.6,
+                "lean_angle": -7.25
+            }
+        ],
+        "options": {
+            "skip_idle_gap_fill": true,
+            "smoothing": {}
+        }
+    });
+
+    let activity = finalize_raw_activity_json(&raw_activity.to_string(), None)
+        .unwrap()
+        .parsed_activity;
+
+    assert_eq!(activity.distance, vec![Some(0.0), Some(12.5)]);
+    assert_eq!(activity.lap_number, vec![0, 1]);
+    assert_eq!(activity.lap_time_seconds, vec![Some(0.0), Some(0.0)]);
+    assert_eq!(activity.lap_start_elapsed_seconds, vec![0.0, 1.0]);
+    assert_eq!(activity.lap_durations_seconds, vec![1.0]);
+    assert_eq!(activity.g_force_x, vec![Some(0.1), Some(-0.4)]);
+    assert_eq!(activity.g_force_y, vec![Some(-0.2), Some(0.5)]);
+    assert_eq!(activity.g_force_z, vec![Some(0.3), Some(-0.6)]);
+    assert_eq!(activity.lean_angle, vec![Some(4.5), Some(-7.25)]);
 }
 
 #[test]
@@ -249,7 +295,7 @@ fn finalizes_raw_activity_with_circular_ema_without_heading_wrap_glitch() {
             "heading should stay near north across wrap, got {heading}"
         );
     }
-    assert!(activity.heading[2].unwrap() > 350.0);
+    assert!(activity.heading[2].unwrap() <= 20.0);
 }
 
 #[test]

@@ -189,12 +189,13 @@ impl PreparedValue {
 #[derive(Clone, Debug)]
 pub struct PreparedRenderAssets {
     pub(crate) scene: ValidatedSceneConfig,
+    pub(crate) export_start_seconds: f64,
     pub(crate) timezone: Option<Tz>,
     pub(crate) backdrops: Vec<ValidatedBackdrop>,
     pub(crate) labels: Vec<ValidatedLabel>,
     pub(crate) values: Vec<PreparedValue>,
-    pub(crate) route_cache: Option<RouteWidgetCache>,
-    pub(crate) elevation_cache: Option<ElevationWidgetCache>,
+    pub(crate) route_caches: Vec<RouteWidgetCache>,
+    pub(crate) elevation_caches: Vec<ElevationWidgetCache>,
     pub(crate) base_rgba: Option<Vec<u8>>,
     /// Full source-activity duration in seconds, independent of the current
     /// render scene's trim window. Used by the elapsed-time widget so a
@@ -218,7 +219,7 @@ impl PreparedRenderAssets {
     /// `[[x,y], ...]` arrays and progressValues as a flat `f32` array.
     /// Returns `None` when no elevation widget is configured.
     pub fn elevation_geometry_json(&self) -> Option<serde_json::Value> {
-        let cache = self.elevation_cache.as_ref()?;
+        let cache = self.elevation_caches.first()?;
         let geom = &cache.geometry;
         Some(serde_json::json!({
             "points": geom.points.iter().map(|(x, y)| [x, y]).collect::<Vec<_>>(),
@@ -237,7 +238,7 @@ impl PreparedRenderAssets {
     /// `[[x,y], ...]` arrays and progressValues as a flat `f32` array.
     /// Returns `None` when no route widget is configured.
     pub fn route_geometry_json(&self) -> Option<serde_json::Value> {
-        let cache = self.route_cache.as_ref()?;
+        let cache = self.route_caches.first()?;
         let geom = &cache.geometry;
         Some(serde_json::json!({
             "points": geom.points.iter().map(|(x, y)| [x, y]).collect::<Vec<_>>(),

@@ -100,25 +100,35 @@ pub fn prepare_render_assets(
     prepare_profiler: &mut RenderProfiler,
 ) -> CoreResult<PreparedRenderAssets> {
     let scene = config.scene.clone();
+    let export_start_seconds = if scene.composite_video_path.is_some() {
+        scene.composite_sync_offset.ok_or_else(|| {
+            crate::error::CoreError::Config(
+                "scene.composite_sync_offset required when a composite video is configured".into(),
+            )
+        })?
+    } else {
+        scene.start
+    };
     let backdrops = config.backdrops.clone();
     let labels = config.labels.clone();
     let values = config.values.clone();
 
     let mut assets = PreparedRenderAssets {
         scene,
+        export_start_seconds,
         timezone: activity.timezone.clone(),
         backdrops,
         labels,
         values,
-        route_cache: None,
-        elevation_cache: None,
+        route_caches: Vec::new(),
+        elevation_caches: Vec::new(),
         base_rgba: None,
         full_activity_duration_seconds: activity.trim_end_seconds,
         scene_start_offset_seconds: config.scene.start,
     };
 
-    if let Some(validated) = &config.course_plot {
-        assets.route_cache = Some(route::prepare_route_cache(
+    for validated in &config.course_plots {
+        assets.route_caches.push(route::prepare_route_cache(
             activity,
             dense_activity,
             validated,
@@ -127,14 +137,16 @@ pub fn prepare_render_assets(
         )?);
     }
 
-    if let Some(validated) = &config.elevation_plot {
-        assets.elevation_cache = Some(elevation::prepare_elevation_cache(
-            activity,
-            dense_activity,
-            validated,
-            &assets.scene,
-            prepare_profiler,
-        )?);
+    for validated in &config.elevation_plots {
+        assets
+            .elevation_caches
+            .push(elevation::prepare_elevation_cache(
+                activity,
+                dense_activity,
+                validated,
+                &assets.scene,
+                prepare_profiler,
+            )?);
     }
 
     let altitude_series =
