@@ -210,6 +210,8 @@
     "activityOverlay": "Sovrapposizione attività",
     "batch": "Batch",
     "batchRender": "Rendering in batch",
+    "currentVideo": "Video corrente",
+    "lockedToEachVideoFps": "Bloccato agli FPS di ciascun video",
     "checkingOverlap": "Controllo sovrapposizione temporale...",
     "chooseFolder": "Scegli cartella...",
     "clearQueue": "Svuota coda",

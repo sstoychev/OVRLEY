@@ -186,6 +186,8 @@
     "activityOverlay": "Activity overlay",
     "batch": "Batch",
     "batchRender": "Batch Render",
+    "currentVideo": "Current video",
+    "lockedToEachVideoFps": "Locked to each video's FPS",
     "chooseFolder": "Choose folder...",
     "clearQueue": "Clear queue",
     "close": "Close",

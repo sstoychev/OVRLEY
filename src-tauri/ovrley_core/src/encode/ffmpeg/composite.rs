@@ -30,9 +30,8 @@ use crate::error::{CoreError, CoreResult};
 use crate::render::FrameSize;
 
 use super::composite_filters::{
-    composite_filter_complex, cuda_display_metadata_filter,
-    format_seconds_arg, normalize_source_rotation, qsv_overlay_cpu_rotation_filter,
-    source_rotation_filter,
+    composite_filter_complex, cuda_display_metadata_filter, format_seconds_arg,
+    normalize_source_rotation, qsv_overlay_cpu_rotation_filter, source_rotation_filter,
 };
 use super::composite_profiles::composite_profile;
 
@@ -190,7 +189,6 @@ pub fn build_composite_ffmpeg_settings(
     ]);
 
     // ── PHASE 4: BUILD INPUT 1 ARGS (raw RGBA overlay via stdin pipe) ──
-    // No input -thread_queue_size: a no-op since FFmpeg 7 and rejected by newer builds.
     let input_1_args = vec![
         "-f".to_string(),
         "rawvideo".to_string(),

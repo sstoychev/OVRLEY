@@ -210,6 +210,8 @@
     "activityOverlay": "Etkinlik kaplaması",
     "batch": "Toplu",
     "batchRender": "Toplu işleme",
+    "currentVideo": "Geçerli video",
+    "lockedToEachVideoFps": "Her videonun FPS değerine kilitli",
     "checkingOverlap": "Çakışma kontrol ediliyor...",
     "chooseFolder": "Klasör seç...",
     "clearQueue": "Kuyruğu temizle",
