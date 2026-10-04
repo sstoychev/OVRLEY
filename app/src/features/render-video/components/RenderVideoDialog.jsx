@@ -349,11 +349,12 @@ export default function RenderVideoDialog(props) {
                     </span>
                   </div>
                   <Slider
-                    min={5}
-                    max={100}
-                    step={5}
-                    value={[ctx.settings.exportBitrate ?? 20]}
-                    onValueChange={([value]) => ctx.onSettingsChange({ exportBitrate: value })}
+                    aria-label={ctx.settings.qualityType === 'quality' ? t('render-video.quality', 'Quality') : t('render-video.bitrate', 'Bitrate')}
+                    min={ctx.settings.qualityType === 'quality' ? QUALITY_SLIDER_RANGE.min : 5}
+                    max={ctx.settings.qualityType === 'quality' ? QUALITY_SLIDER_RANGE.max : 100}
+                    step={ctx.settings.qualityType === 'quality' ? 1 : 5}
+                    value={[ctx.qualitySliderValue]}
+                    onValueChange={ctx.handleQualityValueChange}
                     disabled={ctx.settingsLocked}
                   />
                 </div>

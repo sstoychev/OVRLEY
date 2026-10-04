@@ -179,7 +179,8 @@ export default function useBatchRenderWorkflow({ settings }) {
         config: effectiveConfig,
         exportMode,
         exportCodec: batchSettings.exportCodec,
-        exportBitrate: batchSettings.exportBitrate,
+        qualityType: batchSettings.qualityType,
+        qualityValue: batchSettings.qualityValue,
         exportRange: DEFAULT_EXPORT_RANGE,
         updateRate,
         availableCodecs: state.availableCodecs,
@@ -236,7 +237,8 @@ export default function useBatchRenderWorkflow({ settings }) {
       widgetUpdateRate: batchSettings.updateRate,
       exportMode: batchSettings.exportMode,
       codec: batchSettings.exportCodec,
-      bitrateMbps: batchSettings.exportBitrate ?? null,
+      qualityType: batchSettings.qualityType,
+      qualityValue: batchSettings.qualityValue,
     })
     setBatchRunning(true)
     try {

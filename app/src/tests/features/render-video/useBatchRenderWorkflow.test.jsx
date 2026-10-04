@@ -35,7 +35,8 @@ const batchSettings = {
   exportMode: 'composite',
   exportCodec: 'libx264',
   exportAcceleration: 'cpu',
-  exportBitrate: 35,
+  qualityType: 'bitrate',
+  qualityValue: 35,
   exportRange: { ...DEFAULT_EXPORT_RANGE },
 }
 
@@ -73,7 +74,8 @@ describe('useBatchRenderWorkflow', () => {
         config: expect.objectContaining({ scene: expect.objectContaining({ fps: 24 }) }),
         exportMode: 'composite',
         exportCodec: 'libx264',
-        exportBitrate: 35,
+        qualityType: 'bitrate',
+        qualityValue: 35,
         exportRange: DEFAULT_EXPORT_RANGE,
         importedVideoPath: 'C:\\videos\\ride.mp4',
         outputPath: 'C:\\renders\\ride.mp4',
@@ -87,7 +89,8 @@ describe('useBatchRenderWorkflow', () => {
       widgetUpdateRate: 2,
       exportMode: 'composite',
       codec: 'libx264',
-      bitrateMbps: 35,
+      qualityType: 'bitrate',
+      qualityValue: 35,
     })
   })
 })

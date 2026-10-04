@@ -25,6 +25,7 @@ import {
   isOutputFormatAvailable,
 } from '../utils/codecUtils'
 import { getRenderOutputExtension } from '../utils/render-output'
+import { getDefaultQuality, invertQualityValue } from '../utils/renderQuality'
 import useBatchRenderWorkflow from './useBatchRenderWorkflow'
 import useRenderVideoDerivedState from './useRenderVideoDerivedState'
 
@@ -243,6 +244,17 @@ export default function useRenderVideoDialogState({
       exportCodec: nextExportCodec,
       exportAcceleration: value,
     })
+  }
+
+  const handleQualityTypeChange = (qualityType) => {
+    onSettingsChange({
+      qualityType,
+      qualityValue: qualityType === 'quality' ? getDefaultQuality(settings.exportCodec) : defaultBitrateForCodec(settings.exportCodec),
+    })
+  }
+
+  const handleQualityValueChange = ([value]) => {
+    onSettingsChange({ qualityValue: settings.qualityType === 'quality' ? invertQualityValue(value) : value })
   }
 
   const batchStartDisabled =

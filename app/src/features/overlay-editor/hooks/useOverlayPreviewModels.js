@@ -57,14 +57,7 @@ function prepareLapLogs(renderedWidgets, activity) {
  * @returns {{ metricPreviewModels: object, textPreviewModels: object }} Models keyed by widget id.
  */
 export default function useOverlayPreviewModels({ renderedWidgets, activity, previewSecond, exportStartSecond, exportEndSecond, globalScale }) {
-  const fontRequests = useMemo(() => buildFontRequests(renderedWidgets), [renderedWidgets])
-  const fontMetricsVersion = useFontMetrics(fontRequests)
-  const lapLogPreparations = useMemo(
-    () => prepareLapLogs(renderedWidgets, activity),
-    // Font readiness changes canvas measurements without changing the preparation inputs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activity, fontMetricsVersion, renderedWidgets],
-  )
+  const lapLogPreparations = useMemo(() => prepareLapLogs(renderedWidgets, activity), [activity, renderedWidgets])
 
   const metricPreviewModels = useMemo(
     () =>
@@ -78,9 +71,7 @@ export default function useOverlayPreviewModels({ renderedWidgets, activity, pre
         exportStartSecond,
         exportEndSecond,
       }),
-    // Font readiness changes canvas measurements without changing the model inputs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [activity, exportStartSecond, exportEndSecond, fontMetricsVersion, globalScale, lapLogPreparations, previewSecond, renderedWidgets],
+    [activity, exportStartSecond, exportEndSecond, globalScale, lapLogPreparations, previewSecond, renderedWidgets],
   )
 
   const textPreviewModels = useMemo(() => buildPreviewModels({ renderedWidgets, category: 'labels' }), [renderedWidgets])

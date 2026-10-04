@@ -34,7 +34,7 @@ function ErrorAlert() {
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>{t('app-shell.errorRenderingVideo', 'Error Rendering Video')}</AlertTitle>
         <AlertDescription className="max-h-[70vh] overflow-y-auto text-sm opacity-90 select-text whitespace-pre-wrap break-words">
-          {errorMessage}
+          {translateBackendError(errorMessage)}
         </AlertDescription>
         <Button
           variant="ghost"
