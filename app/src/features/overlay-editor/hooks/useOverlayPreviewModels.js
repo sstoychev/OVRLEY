@@ -2,9 +2,6 @@ import { useMemo } from 'react'
 import { buildMetricWidgetPreviewModel } from '@/features/widget-preview/widgets/metric/model'
 import { buildLapTimerPreviewModel, prepareLapLogPreview } from '@/features/widget-preview/widgets/lap-timer/model'
 import { buildTextWidgetPreviewModel } from '@/features/widget-preview/widgets/text/model'
-import { isBoxedDisplayType } from '@/lib/widget/standard-metrics'
-import { getPreviewFontFamily } from '@/features/widget-preview/shared/textMeasurement'
-import { useFontMetrics } from '@/features/widget-preview/shared/useFontMetrics'
 
 const EMPTY_PREVIEW_MODELS = {}
 
@@ -44,15 +41,6 @@ function prepareLapLogs(renderedWidgets, activity) {
     }
   }
   return preparations
-}
-
-function buildFontRequests(renderedWidgets) {
-  return renderedWidgets
-    .filter(
-      (widget) =>
-        widget.category === 'labels' || (widget.category === 'values' && widget.type !== 'gradient' && !isBoxedDisplayType(widget.data.display_type)),
-    )
-    .map((widget) => ({ fontFamily: getPreviewFontFamily(widget.data.font), fontSize: widget.data.font_size }))
 }
 
 /**
@@ -95,12 +83,7 @@ export default function useOverlayPreviewModels({ renderedWidgets, activity, pre
     [activity, exportStartSecond, exportEndSecond, fontMetricsVersion, globalScale, lapLogPreparations, previewSecond, renderedWidgets],
   )
 
-  const textPreviewModels = useMemo(
-    () => buildPreviewModels({ renderedWidgets, category: 'labels' }),
-    // Font readiness changes canvas measurements without changing the model inputs.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fontMetricsVersion, renderedWidgets],
-  )
+  const textPreviewModels = useMemo(() => buildPreviewModels({ renderedWidgets, category: 'labels' }), [renderedWidgets])
 
   return { metricPreviewModels, textPreviewModels }
 }
