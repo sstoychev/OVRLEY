@@ -5,7 +5,16 @@ import { buildTextWidgetPreviewModel } from '@/features/widget-preview/widgets/t
 
 const EMPTY_PREVIEW_MODELS = {}
 
-function buildPreviewModels({ renderedWidgets, category, activity, previewSecond, lapLogPreparations, globalScale, exportStartSecond }) {
+function buildPreviewModels({
+  renderedWidgets,
+  category,
+  activity,
+  previewSecond,
+  lapLogPreparations,
+  globalScale,
+  exportStartSecond,
+  exportEndSecond,
+}) {
   const models = {}
 
   for (const widget of renderedWidgets) {
@@ -15,7 +24,7 @@ function buildPreviewModels({ renderedWidgets, category, activity, previewSecond
       category === 'values'
         ? widget.data.display_type === 'lap_timer'
           ? buildLapTimerPreviewModel({ widget, activity, previewSecond, lapLogPreparation: lapLogPreparations[widget.id] })
-          : buildMetricWidgetPreviewModel({ widget, activity, previewSecond, globalScale, exportStartSecond })
+          : buildMetricWidgetPreviewModel({ widget, activity, previewSecond, globalScale, exportStartSecond, exportEndSecond })
         : buildTextWidgetPreviewModel({ widget })
 
     if (model) models[widget.id] = model
@@ -43,10 +52,11 @@ function prepareLapLogs(renderedWidgets, activity) {
  * @param {object|null} params.activity - Parsed activity used by metric models.
  * @param {number} params.previewSecond - Canonical preview timestamp.
  * @param {number} params.exportStartSecond - Canonical timeline second where the current export begins.
+ * @param {number} params.exportEndSecond - Canonical timeline second where the current export ends.
  * @param {number} params.globalScale - Scale applied to intrinsic widget previews.
  * @returns {{ metricPreviewModels: object, textPreviewModels: object }} Models keyed by widget id.
  */
-export default function useOverlayPreviewModels({ renderedWidgets, activity, previewSecond, exportStartSecond, globalScale }) {
+export default function useOverlayPreviewModels({ renderedWidgets, activity, previewSecond, exportStartSecond, exportEndSecond, globalScale }) {
   const lapLogPreparations = useMemo(() => prepareLapLogs(renderedWidgets, activity), [activity, renderedWidgets])
 
   const metricPreviewModels = useMemo(
@@ -59,8 +69,9 @@ export default function useOverlayPreviewModels({ renderedWidgets, activity, pre
         lapLogPreparations,
         globalScale,
         exportStartSecond,
+        exportEndSecond,
       }),
-    [activity, exportStartSecond, globalScale, lapLogPreparations, previewSecond, renderedWidgets],
+    [activity, exportEndSecond, exportStartSecond, globalScale, lapLogPreparations, previewSecond, renderedWidgets],
   )
 
   const textPreviewModels = useMemo(() => buildPreviewModels({ renderedWidgets, category: 'labels' }), [renderedWidgets])

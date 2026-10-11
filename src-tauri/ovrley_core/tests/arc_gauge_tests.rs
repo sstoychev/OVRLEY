@@ -254,6 +254,7 @@ fn dense_speed_activity(speed: Vec<Option<f64>>) -> DenseActivityReport {
         .map(|range| (ovrley_core::MetricKind::Speed, range))
         .into_iter()
         .collect(),
+        full_activity_duration_seconds: 0.0,
         series,
     }
 }

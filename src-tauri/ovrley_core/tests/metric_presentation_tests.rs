@@ -92,6 +92,7 @@ fn default_dense_activity() -> DenseActivityReport {
         full_activity_distance: None,
         full_activity_total_ascent: None,
         full_activity_metric_ranges: Default::default(),
+        full_activity_duration_seconds: 0.0,
         series: empty_dense_series(),
     }
 }
@@ -244,6 +245,7 @@ fn prepare_assets_distinct_caches_per_value_index() {
         full_activity_distance: None,
         full_activity_total_ascent: None,
         full_activity_metric_ranges: Default::default(),
+        full_activity_duration_seconds: 0.0,
         series: empty_dense_series(),
     };
     let paths = AppPaths {
@@ -314,6 +316,7 @@ fn render_preserves_multiple_boxed_reports() {
         full_activity_distance: None,
         full_activity_total_ascent: None,
         full_activity_metric_ranges: Default::default(),
+        full_activity_duration_seconds: 0.0,
         series,
     };
     let fonts_dir = workspace_root.join("fonts");
@@ -404,6 +407,7 @@ fn render_reports_multiple_heading_tapes_with_identity() {
         full_activity_distance: None,
         full_activity_total_ascent: None,
         full_activity_metric_ranges: Default::default(),
+        full_activity_duration_seconds: 0.0,
         series: empty_dense_series(),
     };
     let fonts_dir = workspace_root.join("fonts");

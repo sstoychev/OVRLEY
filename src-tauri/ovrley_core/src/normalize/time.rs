@@ -20,6 +20,7 @@ pub enum ValidatedTimeFormatting {
     Elapsed {
         origin: ElapsedTimeOrigin,
         show_hundredths: bool,
+        show_total: bool,
     },
 }
 
@@ -125,11 +126,13 @@ pub fn validate_time_value(value: ValueConfig, index: usize) -> CoreResult<Valid
         }
     };
     let show_hundredths = require_bool(value.show_hundredths, &p("show_hundredths"))?;
+    let show_total = require_bool(value.show_total, &p("show_total"))?;
     let formatting = match time_mode.as_str() {
         "daytime" => ValidatedTimeFormatting::Daytime(format_key),
         "elapsed" => ValidatedTimeFormatting::Elapsed {
             origin: elapsed_origin,
             show_hundredths,
+            show_total,
         },
         value => {
             return Err(CoreError::Config(format!(

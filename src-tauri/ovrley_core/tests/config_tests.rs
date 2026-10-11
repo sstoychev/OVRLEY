@@ -231,6 +231,7 @@ fn time_uses_the_same_text_alignment_contract() {
     time["time_mode"] = json!("daytime");
     time["elapsed_origin"] = json!("activity");
     time["show_hundredths"] = json!(false);
+    time["show_total"] = json!(false);
 
     let config = common::seam::validated_config_from_value(json!({
         "scene": common::seam::explicit_scene_json(),
@@ -254,6 +255,7 @@ fn time_requires_its_canonical_formatting_fields() {
         "time_mode",
         "elapsed_origin",
         "show_hundredths",
+        "show_total",
     ] {
         let mut time = common::builders::speed_value_json();
         time["value"] = json!("time");
@@ -264,6 +266,7 @@ fn time_requires_its_canonical_formatting_fields() {
         time["time_mode"] = json!("daytime");
         time["elapsed_origin"] = json!("activity");
         time["show_hundredths"] = json!(false);
+        time["show_total"] = json!(false);
         time.as_object_mut().unwrap().remove(missing_field);
 
         let result = ovrley_core::commands::validate_config_value(&json!({
@@ -288,6 +291,7 @@ fn time_requires_its_canonical_formatting_fields() {
     time["time_mode"] = json!("daytime");
     time["elapsed_origin"] = json!("activity");
     time["show_hundredths"] = json!(false);
+    time["show_total"] = json!(false);
     let result = ovrley_core::commands::validate_config_value(&json!({
         "scene": common::seam::explicit_scene_json(),
         "labels": [],
@@ -309,6 +313,7 @@ fn time_requires_its_canonical_formatting_fields() {
     time["time_mode"] = json!("daytime");
     time["elapsed_origin"] = json!("activity");
     time["show_hundredths"] = json!(false);
+    time["show_total"] = json!(false);
     time["time_format"] = json!("%H:%M");
     let result = ovrley_core::commands::validate_config_value(&json!({
         "scene": common::seam::explicit_scene_json(),
