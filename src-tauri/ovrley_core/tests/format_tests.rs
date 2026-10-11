@@ -51,6 +51,7 @@ fn formats_signed_export_relative_elapsed_time() {
     time["hours_offset"] = json!(0);
     time["elapsed_origin"] = json!("export");
     time["show_hundredths"] = json!(true);
+    time["show_total"] = json!(false);
     let config = common::seam::validated_config_from_value(json!({
         "scene": common::seam::explicit_scene_json(),
         "labels": [],
@@ -67,12 +68,51 @@ fn formats_signed_export_relative_elapsed_time() {
         ElapsedTimeValues {
             activity_seconds: 5.37,
             export_seconds: -4.63,
+            activity_total_seconds: 0.0,
+            export_total_seconds: 0.0,
         },
         None,
     );
 
     assert_eq!(export_relative.standard_text().0, "-0:00:04.63");
     assert_eq!(format_elapsed_time(90_061.0, false), "25:01:01");
+}
+
+#[test]
+fn appends_total_duration_when_show_total_is_enabled() {
+    let mut time = common::builders::speed_value_json();
+    time["value"] = json!("time");
+    time["show_units"] = json!(false);
+    time["display_unit"] = json!("");
+    time["time_mode"] = json!("elapsed");
+    time["format"] = json!("time-24");
+    time["hours_offset"] = json!(0);
+    time["elapsed_origin"] = json!("activity");
+    time["show_hundredths"] = json!(false);
+    time["show_total"] = json!(true);
+    let config = common::seam::validated_config_from_value(json!({
+        "scene": common::seam::explicit_scene_json(),
+        "labels": [],
+        "values": [time],
+        "plots": []
+    }));
+    let PreparedValue::TimeText(validated) = config.values.into_iter().next().unwrap() else {
+        panic!("expected validated time widget");
+    };
+
+    let with_total = format_validated_time_parts(
+        &validated,
+        None,
+        ElapsedTimeValues {
+            activity_seconds: 30.0,
+            export_seconds: 0.0,
+            activity_total_seconds: 90.0,
+            export_total_seconds: 0.0,
+        },
+        None,
+    );
+
+    assert_eq!(with_total.standard_text().0, "0:00:30/0:01:30");
 }
 
 #[test]

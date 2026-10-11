@@ -212,6 +212,7 @@ pub fn minimal_dense_activity() -> DenseActivityReport {
         full_activity_distance: None,
         full_activity_total_ascent: None,
         full_activity_metric_ranges: Default::default(),
+        full_activity_duration_seconds: 0.0,
         series: empty_dense_series(),
     }
 }
@@ -226,6 +227,7 @@ pub fn dense_report_with(fill: impl FnOnce(&mut DenseSeriesReport)) -> DenseActi
         full_activity_distance: None,
         full_activity_total_ascent: None,
         full_activity_metric_ranges: Default::default(),
+        full_activity_duration_seconds: 0.0,
         series,
     }
 }
@@ -248,6 +250,7 @@ pub fn minimal_trimmed_activity(times: Vec<f64>) -> TrimmedActivity {
         full_activity_distance: None,
         full_activity_total_ascent: None,
         full_activity_metric_ranges: Default::default(),
+        full_activity_duration_seconds: 0.0,
         heartrate: vec![],
         cadence: vec![],
         power: vec![],

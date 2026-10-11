@@ -262,13 +262,37 @@ export function buildArcGaugeInnerWidgetModel({ widget, presentationValue }) {
 }
 
 /**
+ * Formats the current elapsed time value, optionally paired with the total
+ * elapsed duration for the widget's origin (activity or export window).
+ * @param {object} params
+ * @param {object|null} params.activity - Activity data containing trim_end_seconds.
+ * @param {number} params.previewSecond - Current preview time in seconds.
+ * @param {number} params.exportStartSecond - Timeline second corresponding to elapsed export time zero.
+ * @param {number} [params.exportEndSecond] - Timeline second corresponding to the end of the export window.
+ * @param {object} params.widgetData - Normalized time-widget data.
+ * @returns {string} Formatted elapsed time display.
+ */
+function formatElapsedTimePreviewDisplay({ activity, previewSecond, exportStartSecond, exportEndSecond, widgetData }) {
+  const isExportOrigin = widgetData.elapsed_origin === 'export'
+  const currentElapsed = isExportOrigin ? previewSecond - exportStartSecond : previewSecond
+  const current = formatElapsedTimeValue(currentElapsed, widgetData.show_hundredths)
+  if (!widgetData.show_total) return current
+
+  const totalElapsed = isExportOrigin ? exportEndSecond - exportStartSecond : activity?.trim_end_seconds
+  if (!Number.isFinite(totalElapsed)) return current
+
+  return `${current}/${formatElapsedTimeValue(totalElapsed, widgetData.show_hundredths)}`
+}
+
+/**
  * Builds the formatted layout model for an intrinsic metric widget preview.
  * @param {object} params - Widget and current activity preview state.
  * @param {number} params.exportStartSecond - Timeline second corresponding to elapsed export time zero.
+ * @param {number} [params.exportEndSecond] - Timeline second corresponding to the end of the export window.
  * @param {number} params.globalScale - Global scale applied when the SVG is rendered.
  * @returns {object|null} Metric presentation model, or null for unsupported presentations.
  */
-export function buildMetricWidgetPreviewModel({ widget, activity, previewSecond, exportStartSecond, globalScale }) {
+export function buildMetricWidgetPreviewModel({ widget, activity, previewSecond, exportStartSecond, exportEndSecond, globalScale }) {
   // Guard — skip non-value widgets and gradient type (handled separately).
   if (widget.category !== 'values' || widget.type === 'gradient') return null
   // Boxed display types use their own presentation-specific preview path.
@@ -301,10 +325,7 @@ export function buildMetricWidgetPreviewModel({ widget, activity, previewSecond,
   } else if (widget.type === 'time') {
     valueText =
       widget.data.time_mode === 'elapsed'
-        ? formatElapsedTimeValue(
-            widget.data.elapsed_origin === 'export' ? previewSecond - exportStartSecond : previewSecond,
-            widget.data.show_hundredths,
-          )
+        ? formatElapsedTimePreviewDisplay({ activity, previewSecond, exportStartSecond, exportEndSecond, widgetData: widget.data })
         : formatTimeValue(widget.data.format, getInterpolatedTimeValue(displayActivity, previewSecond), displayActivity?.metadata?.timezone)
   } else {
     throw new Error(`Cannot build intrinsic metric preview for widget type: ${widget.type}`)

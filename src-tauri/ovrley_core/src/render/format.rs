@@ -318,12 +318,24 @@ pub fn format_validated_time_parts(
         ValidatedTimeFormatting::Elapsed {
             origin,
             show_hundredths,
+            show_total,
         } => {
-            let elapsed = match origin {
-                ElapsedTimeOrigin::Activity => elapsed_time.activity_seconds,
-                ElapsedTimeOrigin::Export => elapsed_time.export_seconds,
+            let (elapsed, total) = match origin {
+                ElapsedTimeOrigin::Activity => (
+                    elapsed_time.activity_seconds,
+                    elapsed_time.activity_total_seconds,
+                ),
+                ElapsedTimeOrigin::Export => (
+                    elapsed_time.export_seconds,
+                    elapsed_time.export_total_seconds,
+                ),
             };
-            format_elapsed_time(elapsed, *show_hundredths)
+            let current = format_elapsed_time(elapsed, *show_hundredths);
+            if *show_total {
+                format!("{current}/{}", format_elapsed_time(total, *show_hundredths))
+            } else {
+                current
+            }
         }
     };
     if !validated.base.prefix.is_empty() {
@@ -347,6 +359,8 @@ pub fn format_validated_time_parts(
 pub struct ElapsedTimeValues {
     pub activity_seconds: f64,
     pub export_seconds: f64,
+    pub activity_total_seconds: f64,
+    pub export_total_seconds: f64,
 }
 
 fn format_validated_standard_metric_parts<'a>(
