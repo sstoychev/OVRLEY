@@ -25,10 +25,17 @@ import {
   getDefaultQuality,
   invertQualityValue,
 } from '../utils/codecUtils'
-import { batchResultQueue, getImportedVideoExportRange, getRenderOutputExtension, getRenderSummaryItems } from '../utils/renderPresentation'
+import {
+  batchResultQueue,
+  getImportedVideoExportRange,
+  getRenderOutputExtension,
+  getRenderSummaryItems,
+  listRenderedOutputPaths,
+} from '../utils/renderPresentation'
 import { useTranslation } from 'react-i18next'
 import useRenderVideoDerivedState from './useRenderVideoDerivedState'
 import useBatchInspection from './useBatchInspection'
+import useRenderOutputActions from './useRenderOutputActions'
 
 export default function useRenderVideoDialogState({
   phase,
@@ -61,6 +68,7 @@ export default function useRenderVideoDialogState({
     containerFps,
     defaultBitrateForCodec,
     exportMode,
+    finishedRenderOutputPath,
     hasImportedVideo,
     hasMultipleVideos,
     importedVideoFps,
@@ -245,6 +253,12 @@ export default function useRenderVideoDialogState({
     [batchQueue, showAllBatchVideos],
   )
   const batchStartDisabled = renderStartDisabled || !batch.batchReady
+  const renderedOutputPaths = useMemo(
+    () => listRenderedOutputPaths(finishedRenderOutputPath, batchQueue, batchFinished),
+    [finishedRenderOutputPath, batchQueue, batchFinished],
+  )
+  const outputActions = useRenderOutputActions(renderedOutputPaths)
+  const singleFinished = isProgress && finishedRenderOutputPath !== null
   // With videos the batch service renders the reviewed outputs; without videos a single render.
   const handleConfirm = useCallback(async () => {
     if (hasImportedVideo && !batch.batchReady) return
@@ -259,6 +273,7 @@ export default function useRenderVideoDialogState({
 
   return {
     ...batch,
+    ...outputActions,
     availableCodecs,
     batchSnapshot,
     batchFinished,
@@ -329,6 +344,9 @@ export default function useRenderVideoDialogState({
     showExportRangeSettings: exportMode !== 'composite' && !isSeparate,
     showVideoImportedBadge: hasImportedVideo && !isSeparate,
     showVideoRequiredBadge: !hasImportedVideo,
+    singleFinished,
+    // Rendering keeps the dialog open; finished screens close like any dialog.
+    dialogLocked: (isProgress && !singleFinished) || submissionPending || batch.batchRunning,
     updateRateOptions,
   }
 }

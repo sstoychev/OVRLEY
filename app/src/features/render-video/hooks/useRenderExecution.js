@@ -39,9 +39,7 @@ const transports = {
       const outputPath = state.activeRenderOutputPath
       state.clearRenderSession()
       if (status === 'error') state.setErrorMessage(message)
-      if (status === 'complete') {
-        void backend.openVideo(outputPath).catch((error) => useStore.getState().setErrorMessage(error.message))
-      }
+      if (status === 'complete') state.setFinishedRenderOutputPath(outputPath)
     },
     cancel: () => backend.cancelRender(),
   },

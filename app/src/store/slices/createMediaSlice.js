@@ -25,6 +25,8 @@ export function createMediaSlice(set, get) {
     disabledLaps: [],
     activeRenderId: null,
     activeRenderOutputPath: null,
+    // File of the last completed single render, shown on the finished screen until the dialog closes.
+    finishedRenderOutputPath: null,
     renderProgress: { ...DEFAULT_RENDER_PROGRESS },
 
     setProcessing: (processing) =>
@@ -52,6 +54,7 @@ export function createMediaSlice(set, get) {
       set((state) => {
         state.activeRenderId = renderId
         state.activeRenderOutputPath = outputPath
+        state.finishedRenderOutputPath = null
         state.renderingVideo = true
         state.renderProgress = nextProgress
       })
@@ -64,6 +67,8 @@ export function createMediaSlice(set, get) {
         state.renderingVideo = false
         state.renderCancellationTarget = null
       }),
+
+    setFinishedRenderOutputPath: (outputPath) => set({ finishedRenderOutputPath: outputPath }),
 
     setRenderProgress: (progress) => {
       const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0

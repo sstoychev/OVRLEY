@@ -143,6 +143,8 @@ export function reviewBatchQueue(clips, piecesByVideo, skipOverlay, inspection, 
       offsetSeconds: clip.offsetSeconds,
       pieces: piecesByVideo.get(clip.id) ?? [],
       skipOverlay: skipOverlay[clip.id] === true,
+      // Reviewed rows have written nothing yet; result rows carry their file (see `batchResultQueue`).
+      outputPath: null,
     }
     if (item.pieces.length === 0 && isVideoExcluded(clip))
       return { ...item, status: 'blocked', error: i18next.getFixedT(locale)('render-video.excludedFromExport', 'Excluded from export') }
@@ -176,6 +178,20 @@ export function batchResultQueue(items) {
       outputPath: item.outcome?.status === 'succeeded' ? item.outcome.outputPath : null,
     }
   })
+}
+
+/**
+ * Lists the files a finished render wrote: the completed single render's file, or
+ * the succeeded outputs of a finished batch.
+ * @param {string|null} finishedRenderOutputPath File of the completed single render, or null.
+ * @param {object[]} batchQueue Batch result rows (see `batchResultQueue`).
+ * @param {boolean} batchFinished Whether the batch reached a terminal outcome.
+ * @returns {string[]} Written files; empty while nothing has finished.
+ */
+export function listRenderedOutputPaths(finishedRenderOutputPath, batchQueue, batchFinished) {
+  if (finishedRenderOutputPath !== null) return [finishedRenderOutputPath]
+  if (!batchFinished) return []
+  return batchQueue.filter((item) => item.outputPath !== null).map((item) => item.outputPath)
 }
 
 /** @param {object} snapshot Native snapshot. @returns {boolean} Whether native cleanup has completed. */

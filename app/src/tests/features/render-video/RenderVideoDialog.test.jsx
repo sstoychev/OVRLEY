@@ -7,6 +7,13 @@ import { DEFAULT_EXPORT_RANGE } from '@/features/template-manager'
 import useStore from '@/store/useStore'
 import { DEFAULT_CONFIG, DEFAULT_RENDER_PROGRESS } from '@/store/store-utils'
 import { createTestVideo, videoStoreState } from '@/tests/helpers/videoFixtures'
+import * as backend from '@/api/backend'
+
+vi.mock('@/api/backend', async () => ({
+  ...(await vi.importActual('@/api/backend')),
+  openVideo: vi.fn().mockResolvedValue(undefined),
+  openOutputDirectory: vi.fn().mockResolvedValue(undefined),
+}))
 
 globalThis.ResizeObserver ??= class ResizeObserver {
   observe() {}
@@ -148,7 +155,7 @@ describe('RenderVideoDialog', () => {
     expect(outputPathInput).toHaveValue('C:\\missing\\nested\\output.mov')
   })
 
-  test('keeps fractional bar progress, rounds percentage labels and ETA, and preserves completion presentation', () => {
+  test('keeps fractional bar progress, rounds percentage labels and ETA, and preserves completion presentation', async () => {
     const id = 'C:/videos/ride.mp4'
     const snapshot = {
       batchId: 'batch-1',
@@ -217,6 +224,14 @@ describe('RenderVideoDialog', () => {
     expect(screen.queryByText(/1 completed/)).not.toBeInTheDocument()
     expect(screen.queryByText('Est. Remaining')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Close' })).toBeEnabled()
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Open ride.mp4' }))
+    expect(backend.openVideo).toHaveBeenLastCalledWith('C:/renders/ride_overlay.mov')
+    await user.click(screen.getByRole('button', { name: 'Open file' }))
+    expect(backend.openVideo).toHaveBeenCalledTimes(2)
+    await user.click(screen.getByRole('button', { name: 'Open folder' }))
+    expect(backend.openOutputDirectory).toHaveBeenCalledWith('C:/renders')
   })
 })
 

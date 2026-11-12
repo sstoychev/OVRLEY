@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next'
  * @param {object} props.currentItemProgress - Frontend progress for the active item.
  * @param {function} props.setBatchItemSkipOverlay - Toggles the activity overlay for an item.
  * @param {string[]} props.combinedBlockers - Reasons the combined file cannot be rendered.
+ * @param {function(string): void} props.openOutput - Opens a written output file.
  * @returns {JSX.Element} Rendered component output.
  */
 export default function BatchRenderQueue({
@@ -43,6 +44,7 @@ export default function BatchRenderQueue({
   batchInspecting,
   refreshInspection,
   combinedBlockers,
+  openOutput,
 }) {
   const { t } = useTranslation()
 
@@ -98,6 +100,7 @@ export default function BatchRenderQueue({
               showBatchProgress={showBatchProgress}
               currentItemProgress={item.id === batchActiveItemId ? currentItemProgress : null}
               setBatchItemSkipOverlay={setBatchItemSkipOverlay}
+              onOpenOutput={openOutput}
             />
           ))
         )}

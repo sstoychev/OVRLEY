@@ -399,9 +399,16 @@ describe('useRenderWorkflow', () => {
       })
     })
 
+    // The finished screen keeps the written file until the dialog closes; nothing opens by itself.
     await vi.waitFor(() => {
-      expect(backend.openVideo).toHaveBeenCalledWith('C:\\renders\\overlay.mov')
+      expect(useStore.getState().finishedRenderOutputPath).toBe('C:\\renders\\overlay.mov')
     })
     expect(useStore.getState().activeRenderOutputPath).toBe(null)
+    expect(result.current.renderDialogPhase).toBe('progress')
+    expect(backend.openVideo).not.toHaveBeenCalled()
+
+    act(() => result.current.closeRenderDialog())
+    expect(result.current.renderDialogPhase).toBe('closed')
+    expect(useStore.getState().finishedRenderOutputPath).toBe(null)
   })
 })

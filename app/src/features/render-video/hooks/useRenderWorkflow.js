@@ -39,8 +39,9 @@ export default function useRenderWorkflow({ backendStatus }) {
     return null
   }, [backendStatus, rendererBusy, config, hasParsedActivity])
 
+  // A completed single render stays on its finished screen; the user closes it.
   useEffect(() => {
-    if (renderDialogPhase === 'progress' && !renderingVideo && ['complete', 'cancelled', 'error'].includes(renderStatus)) {
+    if (renderDialogPhase === 'progress' && !renderingVideo && ['cancelled', 'error'].includes(renderStatus)) {
       setRenderDialogPhase('closed')
     }
   }, [renderDialogPhase, renderingVideo, renderStatus])
@@ -70,6 +71,7 @@ export default function useRenderWorkflow({ backendStatus }) {
   const closeRenderDialog = useCallback(() => {
     if (isRendererBusy(useStore.getState())) return
     useStore.getState().clearBatchResults()
+    useStore.getState().setFinishedRenderOutputPath(null)
     setRenderDialogPhase('closed')
     clearOutputReview()
   }, [clearOutputReview])

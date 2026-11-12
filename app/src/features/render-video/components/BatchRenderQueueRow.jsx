@@ -6,8 +6,8 @@ import { formatFps, formatTime } from '../utils/codecUtils'
 import { formatProgressPercent } from '../utils/renderPresentation'
 import { useTranslation } from 'react-i18next'
 
-/** @param {object} props Queue item, active progress, display mode, and the overlay toggle. @returns {JSX.Element} One presentational queue row. */
-function BatchRenderQueueRow({ item, isActive, batchRunning, showBatchProgress, currentItemProgress, setBatchItemSkipOverlay }) {
+/** @param {object} props Queue item, active progress, display mode, the overlay toggle, and the opener of a written file. @returns {JSX.Element} One presentational queue row. */
+function BatchRenderQueueRow({ item, isActive, batchRunning, showBatchProgress, currentItemProgress, setBatchItemSkipOverlay, onOpenOutput }) {
   const { t } = useTranslation()
   const isBlocked = item.status === 'blocked'
   const isDone = item.status === 'succeeded'
@@ -22,9 +22,21 @@ function BatchRenderQueueRow({ item, isActive, batchRunning, showBatchProgress, 
     >
       <div className="min-w-0">
         <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 truncate text-xs font-medium text-foreground" title={item.outputPath ?? item.path}>
-            {item.filename}
-          </p>
+          {item.outputPath === null ? (
+            <p className="min-w-0 truncate text-xs font-medium text-foreground" title={item.path}>
+              {item.filename}
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="min-w-0 cursor-pointer truncate text-left text-xs font-medium text-foreground underline-offset-2 hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+              title={item.outputPath}
+              aria-label={t('render-video.openOutput', { defaultValue: 'Open {{name}}', name: item.filename })}
+              onClick={() => onOpenOutput(item.outputPath)}
+            >
+              {item.filename}
+            </button>
+          )}
           {hasProgress ? (
             <span
               className={`shrink-0 text-right text-[0.7rem] font-semibold tabular-nums ${isDone ? 'text-green-700' : 'text-muted-foreground/60'}`}

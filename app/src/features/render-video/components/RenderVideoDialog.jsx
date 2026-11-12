@@ -52,12 +52,12 @@ export default function RenderVideoDialog(props) {
         className={`w-full rounded-sm border border-accent-border/80 bg-card p-6 shadow-2xl shadow-background/50 ${ctx.hasMultipleVideos ? 'max-w-6xl' : 'max-w-xl'}`}
         aria-describedby={undefined}
         onEscapeKeyDown={(event) => {
-          if (ctx.isProgress || ctx.submissionPending || ctx.batchRunning) {
+          if (ctx.dialogLocked) {
             event.preventDefault()
           }
         }}
         onPointerDownOutside={(event) => {
-          if (ctx.isProgress || ctx.submissionPending || ctx.batchRunning) {
+          if (ctx.dialogLocked) {
             event.preventDefault()
           }
         }}
@@ -70,6 +70,10 @@ export default function RenderVideoDialog(props) {
               renderSummaryItems={ctx.renderSummaryItems}
               onCancel={ctx.handleCancel}
               isCancelling={ctx.isCancelling}
+              finished={ctx.singleFinished}
+              onOpenFile={ctx.openOutputFile}
+              onOpenFolder={ctx.openOutputFolder}
+              onClose={ctx.onClose}
             />
           </>
         ) : hasBlockingResolutionMismatch ? (
@@ -119,6 +123,8 @@ export default function RenderVideoDialog(props) {
                     renderSummaryItems={ctx.renderSummaryItems}
                     finished={ctx.batchFinished}
                     batchSnapshot={ctx.batchSnapshot}
+                    onOpenFile={ctx.openOutputFile}
+                    onOpenFolder={ctx.openOutputFolder}
                   />
                 </>
               ) : (

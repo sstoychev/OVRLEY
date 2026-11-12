@@ -149,6 +149,7 @@ export function useRenderDialogInputs() {
       renderSubmissionTarget: state.renderSubmissionTarget,
       isCancelling: state.renderCancellationTarget !== null,
       renderProgress: state.renderProgress,
+      finishedRenderOutputPath: state.finishedRenderOutputPath,
       batchSnapshot: state.batchSnapshot,
       renderSettings: state.renderSettings,
     })),

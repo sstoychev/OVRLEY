@@ -14,16 +14,29 @@
  * @param {string[]} [props.renderSummaryItems] - Compact render settings summary fragments.
  * @param {boolean} [props.finished] - Whether rendering has reached a terminal outcome.
  * @param {function} [props.onCancel] - Cancellation callback; omitted when actions are in the dialog footer.
+ * @param {function|null} [props.onOpenFile] - Opens the written file once finished; null unless exactly one file was written.
+ * @param {function|null} [props.onOpenFolder] - Opens the output folder once finished; null without written files.
+ * @param {function} [props.onClose] - Closes the finished screen; omitted when actions are in the dialog footer.
  */
 
-import { Activity, CircleCheck, Film, Loader2, Timer } from 'lucide-react'
+import { Activity, CircleCheck, Film, FolderOpen, Loader2, Play, Timer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { formatFps, formatTime } from '../utils/codecUtils'
 import { formatProgressPercent } from '../utils/renderPresentation'
 import { useTranslation } from 'react-i18next'
 
-function RenderProgressPanel({ renderProgress, renderSummaryItems = [], onCancel, isCancelling = false, finished = false, batchSnapshot = null }) {
+function RenderProgressPanel({
+  renderProgress,
+  renderSummaryItems = [],
+  onCancel,
+  isCancelling = false,
+  finished = false,
+  batchSnapshot = null,
+  onOpenFile = null,
+  onOpenFolder = null,
+  onClose,
+}) {
   const { t } = useTranslation()
 
   const { percent, current, total, estimatedSecondsRemaining, renderingFps, encoded } = renderProgress
@@ -137,6 +150,38 @@ function RenderProgressPanel({ renderProgress, renderSummaryItems = [], onCancel
               t('render-video.cancel', 'Cancel')
             )}
           </Button>
+        </div>
+      )}
+
+      {finished && (onOpenFile || onOpenFolder || onClose) && (
+        <div className="flex flex-wrap justify-center gap-3 pt-2">
+          {onOpenFile && (
+            <Button type="button" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={onOpenFile}>
+              <Play className="h-4 w-4" />
+              {t('render-video.openFile', 'Open file')}
+            </Button>
+          )}
+          {onOpenFolder && (
+            <Button
+              type="button"
+              variant="outline"
+              className="border-border/80 bg-surface-elevated text-foreground shadow-xs hover:bg-surface-strong hover:text-foreground"
+              onClick={onOpenFolder}
+            >
+              <FolderOpen className="h-4 w-4" />
+              {t('render-video.openFolder', 'Open folder')}
+            </Button>
+          )}
+          {onClose && (
+            <Button
+              type="button"
+              variant="outline"
+              className="border-border/80 bg-surface-elevated text-foreground shadow-xs hover:bg-surface-strong hover:text-foreground"
+              onClick={onClose}
+            >
+              {t('render-video.close', 'Close')}
+            </Button>
+          )}
         </div>
       )}
 
