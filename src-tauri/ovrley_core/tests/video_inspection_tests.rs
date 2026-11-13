@@ -52,10 +52,13 @@ fn configuration_plans_native_names_and_exact_source_or_layout_work() {
     let source = service
         .inspect_source(&directory.paths(), &session.inspection_id, &path)
         .unwrap();
-    let output = |id: &str, source: &InspectedVideoSource| BatchRenderOutput {
-        id: id.into(),
-        pieces: vec![common::builders::whole_source_piece(source, false)],
-        transitions: Vec::new(),
+    let output = |id: &str, source: &InspectedVideoSource| {
+        common::builders::placed_apart(BatchRenderOutput {
+            id: id.into(),
+            pieces: vec![common::builders::whole_source_piece(source, false)],
+            transitions: Vec::new(),
+            placed_segments: Vec::new(),
+        })
     };
     let mut selection = BatchOutputSelection {
         inspection_id: session.inspection_id.clone(),
@@ -105,18 +108,23 @@ fn configuration_plans_native_names_and_exact_source_or_layout_work() {
     assert_eq!(plans[0].output_id, "ride");
     assert_eq!(plans[0].planned_frames, 240);
     assert!((plans[0].output_duration_seconds - 240.0 * 1001.0 / 30000.0).abs() < 1e-9);
-    for (start_frame, end_frame) in [(300, 300), (300, 60), (0, 601)] {
+    // Pieces without frames are malformed at ingress; the rest must lie within their source.
+    for (start_frame, end_frame, reason) in [
+        (300, 300, "piece 1 has no frames"),
+        (300, 60, "piece 1 has no frames"),
+        (0, 601, "must lie within the 600 frames"),
+    ] {
         let mut invalid = selection.clone();
         invalid.outputs[0].pieces[0].start_frame = start_frame;
         invalid.outputs[0].pieces[0].end_frame = end_frame;
-        assert!(plan_batch_configuration(
+        let message = plan_batch_configuration(
             &service,
             &invalid,
             &encoding(BatchExportMode::Composite),
         )
         .unwrap_err()
-        .to_string()
-        .contains("must lie within the 600 frames"));
+        .to_string();
+        assert!(message.contains(reason), "{message}");
     }
     // An output joins its pieces: frames and durations add up.
     let mut joined = selection.clone();
@@ -422,10 +430,13 @@ fn accepted_sources_survive_disposal_but_closed_and_foreign_sessions_reject() {
         inspection_id: selection.inspection_id.clone(),
         outputs: [&queued, &reference]
             .into_iter()
-            .map(|source| BatchRenderOutput {
-                id: source.source_id.clone(),
-                pieces: vec![common::builders::whole_source_piece(source, false)],
-                transitions: Vec::new(),
+            .map(|source| {
+                common::builders::placed_apart(BatchRenderOutput {
+                    id: source.source_id.clone(),
+                    pieces: vec![common::builders::whole_source_piece(source, false)],
+                    transitions: Vec::new(),
+                    placed_segments: Vec::new(),
+                })
             })
             .collect(),
         destination: BatchDestination::SourceNamed {

@@ -26,7 +26,7 @@ import { RESOLUTIONS } from '../data/sceneSettingsConstants'
 import { sanitizeNumber } from '../utils/sceneSettingsUtils'
 import { buildConfigWidgets } from '@/lib/widget/widget-presentation'
 import { getWidgetInteraction } from '@/features/wasm-widgets/utils/widgetInteraction'
-import { deriveCompatibility } from '@/lib/video-program/video-collection'
+import { deriveReferenceFormat } from '@/lib/video-program/video-collection'
 
 function getResolutionPresetId(scene) {
   if (!scene) return '1080p'
@@ -90,7 +90,7 @@ export default function useSceneSettingsState({ config, onConfigChange, widgetLi
       setRenderWidgetUpdateRate: state.setRenderWidgetUpdateRate,
     })),
   )
-  const videoFormat = useMemo(() => deriveCompatibility(importedVideos).reference, [importedVideos])
+  const videoFormat = useMemo(() => deriveReferenceFormat(importedVideos), [importedVideos])
   const importedVideoFps = videoFormat === null ? null : videoFormat.fps.num / videoFormat.fps.den
   const importedVideoResolution = videoFormat?.resolution ?? null
   const hasTimelineMedia = hasActivity || importedVideos.length > 0

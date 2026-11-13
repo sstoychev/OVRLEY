@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vite-plus/test'
 
-import { buildProgram, findInvalidTransitions, resolveProgramPosition } from '@/lib/video-program/program'
+import { buildProgram, resolveProgramPosition } from '@/lib/video-program/program'
 import { DEFAULT_TRANSITION_SETTINGS, HARD_CUT } from '@/lib/video-program/transition-catalog'
 import { cutEdits } from '@/tests/helpers/videoFixtures'
 
@@ -197,18 +197,6 @@ describe('buildProgram overlaps', () => {
     expect(subFrame.overlaps).toEqual([])
     const wholeFrame = program([first, video('b', { offsetSeconds: end - 1001 / 30000, importOrder: 1, fps: NTSC })])
     expect(wholeFrame.overlaps).toHaveLength(1)
-  })
-})
-
-describe('findInvalidTransitions', () => {
-  test('flags pieces whose incoming and outgoing transitions leave no untouched frame', () => {
-    const three = { type: 'fade', durationSeconds: 3 }
-    const result = program([
-      video('a'),
-      video('b', { offsetSeconds: 60, durationSeconds: 5, importOrder: 1, start: { transitionIn: three } }),
-      video('c', { offsetSeconds: 65, importOrder: 2, start: { transitionIn: three } }),
-    ])
-    expect(findInvalidTransitions(result)).toEqual([{ pieceId: result.pieces[1].id, joinKeys: ['b:start', 'c:start'] }])
   })
 })
 

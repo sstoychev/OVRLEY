@@ -9,12 +9,13 @@ use serde::Serialize;
 
 use super::contracts::{
     BatchDestination, BatchEncodingSettings, BatchExportMode, BatchOutputSelection,
-    BatchRenderOutput, BatchRenderPiece, BatchTransition,
+    BatchRenderOutput, BatchRenderPiece,
 };
 use super::inspection::{verify_composite_source_resolution, CompositeSourceMetadata};
 use super::inspection::{
     InspectionRejection, InspectionSourceSelection, InspectionValidation, VideoInspectionService,
 };
+use super::joinability::{check_output, JoinIssue, JoinRules, JoinSource};
 use crate::activity::{
     build_dense_activity_report_for_timeline,
     schema::{DenseActivityReport, ParsedActivity},
@@ -26,7 +27,6 @@ use crate::encode::ffmpeg::catalog::{
     CodecSelection, CompositeCodecId, CompositeFilterStackKind, TransparentCodecId,
 };
 use crate::encode::ffmpeg::settings::build_ffmpeg_settings;
-use crate::encode::ffmpeg::transitions::{is_xfade_transition, NO_TRANSITION};
 use crate::encode::fps::Fps;
 use crate::encode::plan::CompositeRenderPlan;
 use crate::encode::plan::FrameProductionPlan;
@@ -55,6 +55,25 @@ pub(crate) struct ValidatedBatchEncoding {
     qsv_full_init_args: Vec<String>,
 }
 
+/// The codec of an export, which must match its mode's container.
+pub(crate) fn codec_for_export_mode(
+    export_mode: BatchExportMode,
+    export_codec: &str,
+) -> CoreResult<CodecSelection> {
+    let codec = CodecSelection::from_external_name(export_codec)
+        .ok_or_else(|| CoreError::Config(format!("Unsupported batch codec: {export_codec}")))?;
+    if !matches!(
+        (export_mode, codec),
+        (BatchExportMode::Composite, CodecSelection::Composite(_))
+            | (BatchExportMode::Transparent, CodecSelection::Transparent(_))
+    ) {
+        return Err(CoreError::Config(
+            "Batch codec must match the selected export container".into(),
+        ));
+    }
+    Ok(codec)
+}
+
 pub(crate) fn validate_batch_encoding(
     raw: &BatchEncodingSettings,
 ) -> CoreResult<ValidatedBatchEncoding> {
@@ -66,18 +85,7 @@ pub(crate) fn validate_batch_encoding(
             "Batch updateRate must divide the selected FPS".into(),
         ));
     }
-    let codec = CodecSelection::from_external_name(&raw.export_codec).ok_or_else(|| {
-        CoreError::Config(format!("Unsupported batch codec: {}", raw.export_codec))
-    })?;
-    if !matches!(
-        (raw.export_mode, codec),
-        (BatchExportMode::Composite, CodecSelection::Composite(_))
-            | (BatchExportMode::Transparent, CodecSelection::Transparent(_))
-    ) {
-        return Err(CoreError::Config(
-            "Batch codec must match the selected export container".into(),
-        ));
-    }
+    let codec = codec_for_export_mode(raw.export_mode, &raw.export_codec)?;
     let quality = validate_quality(raw.quality_type, raw.quality_value)?;
     let qsv_full_init_args = raw.qsv_full_init_args.clone().unwrap_or_default();
     let needs_qsv = matches!(codec, CodecSelection::Composite(id)
@@ -125,6 +133,38 @@ fn source_fps(source: &InspectedVideoSource) -> CoreResult<Fps> {
     )
 }
 
+/// Words join issues for a refused request; the editor shows its own messages.
+fn describe_join_issues(issues: &[JoinIssue]) -> String {
+    issues
+        .iter()
+        .map(|issue| match issue {
+            JoinIssue::Overlap {
+                earlier_source_id,
+                later_source_id,
+                ..
+            } => {
+                format!("{earlier_source_id} and {later_source_id} overlap")
+            }
+            JoinIssue::Incompatible { source_ids } => {
+                format!(
+                    "{} differ in display resolution or frame rate",
+                    source_ids.join(", ")
+                )
+            }
+            JoinIssue::Rotation { source_ids } => {
+                format!("{} are rotated differently", source_ids.join(", "))
+            }
+            JoinIssue::TransitionTooLong { piece_index, .. } => {
+                format!(
+                    "the transitions around piece {} leave none of its frames untouched",
+                    piece_index + 1
+                )
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
 /// Validates a frame range against its source and derives its window. The source
 /// frame count uses the same rule as the frontend program and the renderer.
 fn frame_window(
@@ -165,11 +205,8 @@ pub(crate) fn validate_batch_outputs(
     outputs: &[BatchRenderOutput],
     destination: &BatchDestination,
 ) -> CoreResult<()> {
-    if let Some(output) = outputs.iter().find(|output| output.pieces.is_empty()) {
-        return Err(CoreError::Config(format!(
-            "Batch output {} must contain at least one piece",
-            output.id
-        )));
+    for output in outputs {
+        super::joinability::validate_output(output)?;
     }
     match destination {
         BatchDestination::File { .. } if outputs.len() != 1 => Err(CoreError::Config(
@@ -191,12 +228,20 @@ pub(crate) fn validate_batch_outputs(
     }
 }
 
-/// Distinct sources referenced by the outputs, in first-use order.
+/// Distinct sources referenced by the outputs' pieces and placed segments, in first-use order.
 pub(crate) fn referenced_source_ids(outputs: &[BatchRenderOutput]) -> Vec<String> {
     let mut ids: Vec<String> = Vec::new();
-    for piece in outputs.iter().flat_map(|output| &output.pieces) {
-        if !ids.contains(&piece.source_id) {
-            ids.push(piece.source_id.clone());
+    for output in outputs {
+        let pieces = output.pieces.iter().map(|piece| &piece.source_id);
+        for id in pieces.chain(
+            output
+                .placed_segments
+                .iter()
+                .map(|segment| &segment.source_id),
+        ) {
+            if !ids.contains(id) {
+                ids.push(id.clone());
+            }
         }
     }
     ids
@@ -417,9 +462,33 @@ impl ValidatedBatchEncoding {
                         })
                     })
                     .collect::<CoreResult<Vec<_>>>()?;
-                self.check_joinable(&output.id, &pieces)?;
+                let join_source = |id: &str| {
+                    let source = sources
+                        .sources()
+                        .iter()
+                        .find(|source| source.source_id == id)
+                        .expect("validated sources cover every placed segment");
+                    Ok(JoinSource {
+                        width: source.display_resolution.width,
+                        height: source.display_resolution.height,
+                        fps: source_fps(source)?,
+                        rotation_degrees: source
+                            .metadata
+                            .rotation_degrees
+                            .unwrap_or(0)
+                            .rem_euclid(360),
+                    })
+                };
+                let check = check_output(output, &join_source, JoinRules::for_codec(self.codec))?;
+                if !check.issues.is_empty() {
+                    return Err(CoreError::Config(format!(
+                        "Batch output {} cannot be joined into one file: {}",
+                        output.id,
+                        describe_join_issues(&check.issues)
+                    )));
+                }
                 let container_fps = self.container_fps(&pieces[0].source)?;
-                let transitions = self.plan_transitions(output, &pieces, container_fps)?;
+                let transitions = self.plan_transitions(output, &check.transition_frames)?;
                 let segments = self.plan_segments(&pieces, &transitions)?;
                 let transition_frames = sum_frames(
                     transitions
@@ -448,85 +517,32 @@ impl ValidatedBatchEncoding {
             .collect()
     }
 
-    /// Validates the joins of an output: one per pair of pieces, a hard cut or a
-    /// catalogue `xfade` of at least one output frame that leaves every piece at
-    /// least one frame of its own. Transparent outputs take hard cuts only.
+    /// The joins of an output checked by `check_output`: transitions span the
+    /// frames it measured on the first piece's grid, which is the output grid of a
+    /// composite output. Transparent outputs take hard cuts only.
     fn plan_transitions(
         &self,
         output: &BatchRenderOutput,
-        pieces: &[PlannedPiece],
-        container_fps: Fps,
+        transition_frames: &[Option<u32>],
     ) -> CoreResult<Vec<Option<PlannedTransition>>> {
-        if output.transitions.len() + 1 != pieces.len() {
-            return Err(CoreError::Config(format!(
-                "Batch output {} must hold one transition per join of its {} pieces",
-                output.id,
-                pieces.len()
-            )));
-        }
-        let invalid =
-            |reason: String| CoreError::Config(format!("Batch output {}: {reason}", output.id));
-        let transitions = output
+        output
             .transitions
             .iter()
-            .map(|transition| {
-                let BatchTransition {
-                    transition_type,
-                    duration_seconds,
-                } = transition;
-                if transition_type == NO_TRANSITION {
-                    return if *duration_seconds == 0.0 {
-                        Ok(None)
-                    } else {
-                        Err(invalid("a hard cut has a duration of 0 seconds".into()))
-                    };
+            .zip(transition_frames)
+            .map(|(transition, frames)| match frames {
+                None => Ok(None),
+                Some(_) if matches!(self.codec, CodecSelection::Transparent(_)) => {
+                    Err(CoreError::Config(format!(
+                        "Batch output {}: transparent outputs join pieces with hard cuts only",
+                        output.id
+                    )))
                 }
-                if !is_xfade_transition(transition_type) {
-                    return Err(invalid(format!("unknown transition {transition_type}")));
-                }
-                if matches!(self.codec, CodecSelection::Transparent(_)) {
-                    return Err(invalid(
-                        "transparent outputs join pieces with hard cuts only".into(),
-                    ));
-                }
-                if !duration_seconds.is_finite() || *duration_seconds <= 0.0 {
-                    return Err(invalid("transition durations must be positive".into()));
-                }
-                let (num, den) = container_fps.components();
-                let frames = (duration_seconds * f64::from(num) / f64::from(den)).round();
-                if frames < 1.0 {
-                    return Err(invalid(format!(
-                        "the {transition_type} transition is shorter than one frame"
-                    )));
-                }
-                Ok(Some(PlannedTransition {
-                    name: transition_type.clone(),
-                    frames: frames as u32,
-                }))
+                Some(frames) => Ok(Some(PlannedTransition {
+                    name: transition.transition_type.clone(),
+                    frames: *frames,
+                })),
             })
-            .collect::<CoreResult<Vec<_>>>()?;
-        let frames_of = |transition: Option<&Option<PlannedTransition>>| {
-            transition
-                .and_then(Option::as_ref)
-                .map_or(0, |transition| transition.frames)
-        };
-        for (index, piece) in pieces.iter().enumerate() {
-            let incoming = if index == 0 {
-                0
-            } else {
-                frames_of(transitions.get(index - 1))
-            };
-            if u64::from(piece.frames)
-                < u64::from(incoming) + u64::from(frames_of(transitions.get(index))) + 1
-            {
-                return Err(invalid(format!(
-                    "the transitions around piece {} leave none of its {} frames untouched",
-                    index + 1,
-                    piece.frames
-                )));
-            }
-        }
-        Ok(transitions)
+            .collect()
     }
 
     /// Splits pieces next to transitions into head, body and tail windows on
@@ -584,40 +600,6 @@ impl ValidatedBatchEncoding {
             CodecSelection::Composite(_) => RenderOutputKind::Composite,
             CodecSelection::Transparent(_) => RenderOutputKind::Transparent,
         }
-    }
-
-    fn check_joinable(&self, output_id: &str, pieces: &[PlannedPiece]) -> CoreResult<()> {
-        let first = &pieces[0].source;
-        let keeps_display_matrix = matches!(self.codec, CodecSelection::Composite(id)
-            if id.metadata().filter_stack_kind == CompositeFilterStackKind::QsvFullOverlay);
-        for piece in &pieces[1..] {
-            let source = &piece.source;
-            let reason = if source.display_resolution != first.display_resolution {
-                Some("display resolution")
-            } else if matches!(self.codec, CodecSelection::Composite(_))
-                && source_fps(source)? != source_fps(first)?
-            {
-                Some("frame rate")
-            } else if keeps_display_matrix
-                && source
-                    .metadata
-                    .rotation_degrees
-                    .unwrap_or(0)
-                    .rem_euclid(360)
-                    != first.metadata.rotation_degrees.unwrap_or(0).rem_euclid(360)
-            {
-                Some("rotation")
-            } else {
-                None
-            };
-            if let Some(reason) = reason {
-                return Err(CoreError::Config(format!(
-                    "Batch output {output_id} joins sources with a different {reason}: {} and {}",
-                    first.metadata.path, source.metadata.path
-                )));
-            }
-        }
-        Ok(())
     }
 }
 

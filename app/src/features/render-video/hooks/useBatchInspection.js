@@ -3,11 +3,15 @@ import { useTranslation } from 'react-i18next'
 import * as backend from '@/api/backend'
 import useStore from '@/store/useStore'
 import { useBatchRenderStore, useBatchSyncInputs } from '@/hooks/useAppStoreSelectors'
+import useJoinability from '@/hooks/useJoinability'
 import { openDirectoryPath } from '@/lib/file-dialog'
 import { joinVideoEdits, sortVideosByTimeline } from '@/lib/video-program/video-collection'
 import { captureRenderEncoding, createExportDestination } from '../utils/renderRequest'
-import { reviewExport } from '../utils/exportOutputs'
+import { buildExportPrograms, createExportJoinabilityRequest, reviewExport } from '../utils/exportOutputs'
 import { formatRenderPathError, reviewBatchSync } from '../utils/renderPresentation'
+
+// Without pieces there is nothing to check, and nothing blocks.
+const NOTHING_CHECKED = Object.freeze([])
 
 /**
  * Inspects every imported video for export, retains the inspection across dialog
@@ -37,6 +41,18 @@ export default function useBatchInspection({ phase, settings }) {
   const context = useMemo(() => ({ sourcePaths, revision }), [sourcePaths, revision])
   const current = inspection?.context === context ? inspection : null
   const inspectionContext = open || current !== null ? context : null
+  const programs = useMemo(
+    () =>
+      settings === null ? [] : buildExportPrograms({ outputMode, clips, exportRange: settings.range, transitionDefaults: inputs.transitionDefaults }),
+    [clips, inputs.transitionDefaults, outputMode, settings],
+  )
+  const joinabilityRequest = useMemo(
+    () => (settings === null ? null : createExportJoinabilityRequest({ programs, clips, exportMode: settings.exportMode, codec: settings.codec })),
+    [clips, programs, settings],
+  )
+  // Only the answer to the current programs may authorize outputs.
+  const joinability = useJoinability(joinabilityRequest)
+  const joinabilityOutputs = joinability.settled ? (joinability.outputs ?? NOTHING_CHECKED) : null
   const reviewed = useMemo(
     () =>
       settings === null
@@ -44,17 +60,16 @@ export default function useBatchInspection({ phase, settings }) {
         : reviewExport({
             outputMode,
             exportMode: settings.exportMode,
-            codec: settings.codec,
+            programs,
+            joinability: joinabilityOutputs,
             clips,
-            exportRange: settings.range,
-            transitionDefaults: inputs.transitionDefaults,
             skipOverlay: store.batchSkipOverlay,
             inspection: current,
             sync,
             locale: i18n.resolvedLanguage,
             outputPath,
           }),
-    [clips, current, i18n.resolvedLanguage, inputs.transitionDefaults, outputMode, outputPath, settings, store.batchSkipOverlay, sync],
+    [clips, current, i18n.resolvedLanguage, joinabilityOutputs, outputMode, outputPath, programs, settings, store.batchSkipOverlay, sync],
   )
   // Review the destination without replacing an existing combined file; submission asks first.
   const destination = useMemo(

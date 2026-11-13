@@ -610,13 +610,28 @@ export async function inspectVideoSource(inspectionId, path) {
  * `{type: 'none', durationSeconds: 0}` or an `xfade`; transparent outputs take hard
  * cuts only); a `sourceNamed` destination writes one file per output (pieces of one
  * source), a `file` destination one combined output.
- * @param {{inspectionId: string, outputs: Array<{id: string, pieces: Array<{sourceId: string, startFrame: number, endFrame: number, skipOverlay: boolean}>, transitions: Array<{type: string, durationSeconds: number}>}>, destination: {kind: 'sourceNamed', directory: string}|{kind: 'file', path: string, overwrite: boolean}}} selection
+ * @param {{inspectionId: string, outputs: Array<{id: string, pieces: Array<{sourceId: string, startFrame: number, endFrame: number, skipOverlay: boolean}>, transitions: Array<{type: string, durationSeconds: number}>, placedSegments: Array<{sourceId: string, startSecond: number, endSecond: number}>}>, destination: {kind: 'sourceNamed', directory: string}|{kind: 'file', path: string, overwrite: boolean}}} selection
  *   Session-owned outputs to plan.
  * @param {{exportMode: string, exportCodec: string, fps: number, updateRate: number, qualityType: string, qualityValue: number, qsvFullInitArgs: string[]|null}} encoding Captured encoder settings.
  * @returns {Promise<{status: 'planned', plans: Array<{outputId: string, outputPath: string, outputDurationSeconds: number, plannedFrames: number, outputFrames: number, containerFpsNum: number, containerFpsDen: number}>}|{status: 'rejected', inspectionId: string, issues: object[]}>} Native planning result.
  */
 export async function planBatchOutputs(selection, encoding) {
   return apiCall('backend_plan_batch_outputs', { selection, encoding })
+}
+
+/**
+ * Checks whether outputs can each be joined into one file: the single source of
+ * joinability issues (overlapping placements, differing resolution or frame rate,
+ * differing rotation for encoders that keep it, transitions longer than their pieces).
+ * Outputs have the shape `planBatchOutputs` takes; their pieces and placed segments
+ * name sources by `sources[].id`.
+ * @param {{sources: Array<{id: string, resolution: {width: number, height: number}, fps: {num: number, den: number}, rotationDegrees: number}>, outputs: Array<object>, exportMode: 'composite'|'transparent', exportCodec: string}} request
+ *   Probed sources, outputs and the export they would render with.
+ * @returns {Promise<Array<{outputId: string, issues: Array<{kind: 'overlap', earlierSourceId: string, laterSourceId: string, startSecond: number, endSecond: number}|{kind: 'incompatible'|'rotation', sourceIds: string[]}|{kind: 'transitionTooLong', pieceIndex: number, joinIndices: number[]}>}>>}
+ *   Issues per output, in request order.
+ */
+export async function checkJoinability(request) {
+  return apiCall('backend_check_joinability', { request })
 }
 
 /**

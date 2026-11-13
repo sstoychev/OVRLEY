@@ -148,11 +148,12 @@ pub fn video_batch_request(
         destination: BatchDestination::SourceNamed {
             directory: directory.to_str().unwrap().into(),
         },
-        outputs: vec![BatchRenderOutput {
+        outputs: vec![placed_apart(BatchRenderOutput {
             id: "video".into(),
             pieces: vec![whole_source_piece(source, skip_overlay)],
             transitions: Vec::new(),
-        }],
+            placed_segments: Vec::new(),
+        })],
     }
 }
 
@@ -345,4 +346,24 @@ pub fn hard_cuts(pieces: usize) -> Vec<ovrley_core::render_jobs::contracts::Batc
             duration_seconds: 0.0,
         })
         .collect()
+}
+
+/// Places every piece of an output on its own stretch of the timeline, in order,
+/// so its placed segments never overlap.
+pub fn placed_apart(
+    mut output: ovrley_core::render_jobs::contracts::BatchRenderOutput,
+) -> ovrley_core::render_jobs::contracts::BatchRenderOutput {
+    output.placed_segments = output
+        .pieces
+        .iter()
+        .enumerate()
+        .map(
+            |(index, piece)| ovrley_core::render_jobs::contracts::BatchPlacedSegment {
+                source_id: piece.source_id.clone(),
+                start_second: index as f64 * 100_000.0,
+                end_second: index as f64 * 100_000.0 + 1.0,
+            },
+        )
+        .collect();
+    output
 }

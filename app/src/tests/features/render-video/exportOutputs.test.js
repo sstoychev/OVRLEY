@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vite-plus/test'
-import { reviewExport } from '@/features/render-video/utils/exportOutputs'
+import { buildExportPrograms, createExportJoinabilityRequest, reviewExport } from '@/features/render-video/utils/exportOutputs'
 import { joinVideoEdits } from '@/lib/video-program/video-collection'
 import { createTestVideo, cutEdits, videoStoreState } from '@/tests/helpers/videoFixtures'
 
@@ -26,14 +26,19 @@ function inspected(clips, failing = []) {
   }
 }
 
-function review(overrides) {
-  const clips = overrides.clips
+/** Reviews an export whose native joinability answer found `issues` for the given output IDs (none by default). */
+function review({ clips, outputMode = 'combined', exportRange = all, issues = {}, joinability, ...overrides }) {
+  const programs = buildExportPrograms({ outputMode, clips, exportRange, transitionDefaults: defaults })
+  const answer =
+    joinability === undefined
+      ? programs.filter(({ program }) => program.pieces.length > 0).map(({ id }) => ({ outputId: id, issues: issues[id] ?? [] }))
+      : joinability
   return reviewExport({
-    outputMode: 'combined',
+    outputMode,
     exportMode: 'composite',
-    codec: 'libx264',
-    exportRange: all,
-    transitionDefaults: defaults,
+    programs,
+    joinability: answer,
+    clips,
     skipOverlay: {},
     inspection: inspected(clips),
     sync,
@@ -60,6 +65,10 @@ describe('reviewExport', () => {
         ],
         // A 10 s gap is above the continuity threshold.
         transitions: [{ type: 'wipeleft', durationSeconds: 1 }],
+        placedSegments: [
+          { sourceId: 'source-ride', startSecond: 0, endSecond: 60 },
+          { sourceId: 'source-climb', startSecond: 70, endSecond: 100 },
+        ],
       },
     ])
     expect(offsets).toEqual({ 'source-ride': 0, 'source-climb': 70 })
@@ -80,7 +89,7 @@ describe('reviewExport', () => {
     // Overlapping videos render as separate files without trimming each other.
     const { outputs, blockers } = review({ clips, outputMode: 'separate' })
     expect(blockers).toEqual([])
-    expect(outputs).toEqual([
+    expect(outputs.map(({ id, pieces, transitions }) => ({ id, pieces, transitions }))).toEqual([
       {
         id: '/videos/ride.mp4',
         pieces: [
@@ -95,34 +104,46 @@ describe('reviewExport', () => {
     expect(ranged.map(({ pieces }) => pieces.map(({ startFrame, endFrame }) => [startFrame, endFrame]))).toEqual([[[600, 1500]], [[0, 600]]])
   })
 
-  test('an encoder that keeps the display rotation joins only videos of one rotation', () => {
-    // Coded portrait and rotated: the same display resolution as ride.
-    const turned = createTestVideo({
-      id: 'turned',
-      path: '/videos/turned.mp4',
-      durationSeconds: 30,
-      width: 1080,
-      height: 1920,
-      rotationDegrees: 90,
-      importOrder: 1,
+  test('asks the native check about every program with pieces, with hard cuts for transparent output', () => {
+    const clips = clipsOf([ride, climb], { ride: 0, climb: 70 }, (edits) => {
+      edits.climb.segments.start.excluded = true
     })
-    const clips = clipsOf([ride, turned], { ride: 0, turned: 70 })
-    expect(review({ clips }).blockers).toEqual([])
-    expect(review({ clips, codec: 'qsv_full_h264' }).blockers).toEqual([
-      'Videos are rotated differently (ride.mp4, turned.mp4), which this encoder cannot join into one file. Export separate files.',
-    ])
-    expect(review({ clips, codec: 'qsv_full_h264', outputMode: 'separate' }).blockers).toEqual([])
+    const separate = buildExportPrograms({ outputMode: 'separate', clips, exportRange: all, transitionDefaults: defaults })
+    const request = createExportJoinabilityRequest({ programs: separate, clips, exportMode: 'transparent', codec: 'prores_ks' })
+    expect(request.outputs.map((output) => output.id)).toEqual(['ride'])
+    expect(request).toMatchObject({ exportMode: 'transparent', exportCodec: 'prores_ks' })
+    const combined = buildExportPrograms({
+      outputMode: 'combined',
+      clips: clipsOf([ride, climb], { ride: 0, climb: 70 }),
+      exportRange: all,
+      transitionDefaults: defaults,
+    })
+    expect(
+      createExportJoinabilityRequest({ programs: combined, clips, exportMode: 'transparent', codec: 'prores_ks' }).outputs[0].transitions,
+    ).toEqual([{ type: 'none', durationSeconds: 0 }])
   })
 
-  test('explains every reason one combined file cannot be rendered', () => {
+  test('words every native issue and every unavailable video as a reason one combined file cannot be rendered', () => {
     const wide = createTestVideo({ id: 'wide', path: '/videos/wide.mp4', durationSeconds: 30, width: 3840, height: 2160, importOrder: 2 })
-    // Climb overlaps the end of ride and continues after it.
     const clips = clipsOf([ride, climb, wide], { ride: 0, climb: 40, wide: 200 })
-    const { blockers, outputs } = review({ clips, inspection: inspected(clips, ['climb']) })
+    const { blockers, outputs } = review({
+      clips,
+      inspection: inspected(clips, ['climb']),
+      issues: {
+        combined: [
+          { kind: 'overlap', earlierSourceId: 'ride', laterSourceId: 'climb', startSecond: 40, endSecond: 60 },
+          { kind: 'incompatible', sourceIds: ['wide'] },
+          { kind: 'rotation', sourceIds: ['ride', 'wide'] },
+          { kind: 'transitionTooLong', pieceIndex: 1, joinIndices: [0] },
+        ],
+      },
+    })
     expect(outputs).toBeNull()
     expect(blockers).toEqual([
       'Videos overlap (ride.mp4, climb.mp4). Move a video or exclude the overlapping part from export.',
       'Videos differ in resolution or frame rate (wide.mp4). Remove them or export separate files.',
+      'Videos are rotated differently (ride.mp4, wide.mp4), which this encoder cannot join into one file. Export separate files.',
+      'Some transitions are longer than the video pieces they join.',
       'Some videos cannot be exported (climb.mp4).',
     ])
     expect(review({ clips: clipsOf([ride], { ride: 0 }), exportRange: { type: 'custom', from: 100, to: 120 } }).blockers).toEqual([
@@ -130,22 +151,12 @@ describe('reviewExport', () => {
     ])
   })
 
-  test('blocks transitions longer than the pieces they join', () => {
-    const clips = clipsOf([ride, climb], { ride: 0, climb: 70 }, (edits) => {
-      edits.climb.segments.start.transitionIn = { type: 'fade', durationSeconds: 40 }
-      Object.assign(
-        edits.ride,
-        cutEdits([
-          { id: 'c1', frame: 300, excluded: true },
-          { id: 'c2', frame: 600, transitionIn: { type: 'fade', durationSeconds: 12 } },
-        ]),
-      )
-    })
-    expect(review({ clips }).blockers).toEqual(['Some transitions are longer than the video pieces they join.'])
-    const separate = review({ clips, outputMode: 'separate' })
+  test('a separate file the native check refuses is blocked on its row', () => {
+    const clips = clipsOf([ride, climb], { ride: 0, climb: 70 })
+    const separate = review({ clips, outputMode: 'separate', issues: { ride: [{ kind: 'transitionTooLong', pieceIndex: 0, joinIndices: [0] }] } })
     expect(separate.rows.find((row) => row.id === 'ride')).toMatchObject({
       status: 'blocked',
-      error: 'A transition is longer than the video pieces it joins',
+      error: 'Some transitions are longer than the video pieces they join.',
     })
     expect(separate.outputs.map((output) => output.id)).toEqual(['/videos/climb.mp4'])
   })
@@ -160,8 +171,9 @@ describe('reviewExport', () => {
     expect(review({ clips }).outputs[0].pieces.map((piece) => piece.sourceId)).toEqual(['source-ride'])
   })
 
-  test('builds no outputs while videos are still being inspected', () => {
+  test('builds no outputs while videos are inspected or before the native check answers', () => {
     const clips = clipsOf([ride], { ride: 0 })
     expect(review({ clips, inspection: null }).outputs).toBeNull()
+    expect(review({ clips, joinability: null }).outputs).toBeNull()
   })
 })

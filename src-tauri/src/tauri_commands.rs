@@ -457,6 +457,17 @@ pub(crate) async fn backend_plan_batch_outputs(
     serialize_command_result(&result).map_err(|message| BackendRenderError::RenderError { message })
 }
 
+/// Checks whether outputs can be joined into one file each: the editor's single
+/// source of joinability issues (see `ovrley_core::render_jobs::joinability`).
+#[tauri::command]
+pub(crate) fn backend_check_joinability(
+    request: ovrley_core::render_jobs::joinability::JoinabilityRequest,
+) -> Result<String, String> {
+    call_and_serialize(ovrley_core::render_jobs::joinability::check_joinability(
+        &request,
+    ))
+}
+
 #[tauri::command]
 pub(crate) fn backend_dispose_video_inspection(
     state: tauri::State<'_, BackendState>,

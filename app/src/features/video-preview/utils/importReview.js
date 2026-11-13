@@ -14,7 +14,6 @@ import {
   removeVideo,
   setVideoSyncTimezoneMode,
 } from '@/lib/video-program/collection-edits'
-import { findCombinedExportIssues } from '@/lib/video-program/combined-export'
 import { buildProgram } from '@/lib/video-program/program'
 import { startsOutsideWindow } from '@/lib/video-program/start-window'
 import { FULL_EXPORT_RANGE } from '@/lib/video-program/timeline'
@@ -292,8 +291,9 @@ export function buildIncludedCollection(collection, includedIds) {
 }
 
 /**
- * Builds the rows of the import dialog in timeline order, with the videos each overlaps among
- * the switched-on ones, whether it starts far from the reference, and the single-file issues.
+ * Builds the rows of the import dialog in timeline order, with whether each starts far from the
+ * reference, and the program of the switched-on videos, whose single-file issues the native
+ * joinability check finds (see `createProgramJoinabilityRequest`).
  * @param {object} options Review inputs.
  * @param {object} options.collection Collection as shown (see `buildShownCollection`).
  * @param {Set<string>} options.newIds Videos of this import.
@@ -302,9 +302,9 @@ export function buildIncludedCollection(collection, includedIds) {
  * @param {Set<string>} options.unplacedIds New videos waiting to be switched on.
  * @param {Set<string>} options.blockedIds New videos with another resolution than the overlay.
  * @param {{type: string, durationSeconds: number, splitGapThresholdSeconds: number}} options.transitionDefaults Draft transition defaults.
- * @returns {{windowKind: 'activity'|'videos'|'span', rows: Array<object>, included: object, issues: Array<object>,
+ * @returns {{windowKind: 'activity'|'videos'|'span', rows: Array<object>, included: object, includedClips: Array<object>, program: object,
  *   timeline: {fromSecond: number, toSecond: number}|null}} The rule that applied, dialog rows, the collection of the switched-on
- *   videos, single-file issues (see `findCombinedExportIssues`), and the timeline they span with the activity (null without videos).
+ *   videos, their clips and program, and the timeline they span with the activity (null without videos).
  */
 export function buildImportReview({ collection, newIds, includedIds, undeterminedIds, unplacedIds, blockedIds, transitionDefaults }) {
   const included = buildIncludedCollection(collection, includedIds)
@@ -313,19 +313,9 @@ export function buildImportReview({ collection, newIds, includedIds, undetermine
   const activityDurationSeconds = activityDurationOf(collection)
   const { kind, farIds } = findFarVideos({ clips, newIds, includedIds, unplacedIds, activityDurationSeconds })
   const program = buildProgram({ videos: includedClips, exportRange: FULL_EXPORT_RANGE, transitionDefaults })
-  const names = new Map(clips.map((clip) => [clip.id, filenameFromSelectedPath(clip.path)]))
-  const overlapsOf = (videoId) =>
-    program.overlaps
-      .filter((overlap) => overlap.earlierVideoId === videoId || overlap.laterVideoId === videoId)
-      .map((overlap) => ({
-        name: names.get(overlap.earlierVideoId === videoId ? overlap.laterVideoId : overlap.earlierVideoId),
-        seconds: overlap.endSecond - overlap.startSecond,
-      }))
-  const issues = findCombinedExportIssues(program, includedClips)
-  const incompatibleIds = new Set(issues.filter((issue) => issue.kind === 'incompatible').flatMap((issue) => issue.videoIds))
   const rows = clips.map((clip) => ({
     id: clip.id,
-    filename: names.get(clip.id),
+    filename: filenameFromSelectedPath(clip.path),
     path: clip.path,
     isNew: newIds.has(clip.id),
     isIncluded: includedIds.has(clip.id),
@@ -339,13 +329,11 @@ export function buildImportReview({ collection, newIds, includedIds, undetermine
     isManual: clip.offsetSource === 'manual',
     // Only a new video whose time cannot be determined is positioned in the list.
     isPositioned: newIds.has(clip.id) && undeterminedIds.has(clip.id),
-    isIncompatible: incompatibleIds.has(clip.id),
-    overlaps: includedIds.has(clip.id) ? overlapsOf(clip.id) : [],
   }))
   const bounds = [
     ...includedClips.flatMap((clip) => [clip.offsetSeconds, clip.offsetSeconds + clip.durationSeconds]),
     ...(activityDurationSeconds === null || includedClips.length === 0 ? [] : [0, activityDurationSeconds]),
   ]
   const timeline = bounds.length === 0 ? null : { fromSecond: Math.min(...bounds), toSecond: Math.max(...bounds) }
-  return { windowKind: kind, rows, included, issues, timeline }
+  return { windowKind: kind, rows, included, includedClips, program, timeline }
 }

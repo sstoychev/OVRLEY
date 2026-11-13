@@ -6,9 +6,13 @@ import { useCallback, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import useStore from '@/store/useStore'
 import { hasActivityCoverage, resolveActivityClipId, resolveActivityContext, resolveAvailableMetrics } from '@/lib/activity/activity-context'
+import { createProgramJoinabilityRequest, listTooLongJoinKeys } from '@/lib/video-program/joinability'
 import { selectVideoTimeline } from '@/lib/video-program/timeline'
 import { listTransitionProxyJobs } from '@/lib/video-program/transition-proxies'
 import { deriveVideoWarnings } from '@/lib/video-program/video-warnings'
+import useJoinability from './useJoinability'
+
+const NO_ISSUES = Object.freeze([])
 
 /**
  * Returns the timeline (see `selectVideoTimeline`).
@@ -19,13 +23,30 @@ export function useVideoTimeline() {
 }
 
 /**
+ * Checks the committed timeline natively, as one file with the project's export
+ * mode and codec (see `useJoinability`). Until the first answer there are no issues.
+ * @returns {{issues: Array<object>, tooLongJoinKeys: Set<string>}} Joinability issues and the keys of joins too long for their pieces.
+ */
+export function useTimelineJoinIssues() {
+  const { clips, program } = useVideoTimeline()
+  const renderSettings = useStore((state) => state.renderSettings)
+  const request = useMemo(() => createProgramJoinabilityRequest({ clips, program, renderSettings }), [clips, program, renderSettings])
+  const { outputs } = useJoinability(request)
+  return useMemo(() => {
+    const issues = request === null || outputs === null ? NO_ISSUES : outputs[0].issues
+    return { issues, tooLongJoinKeys: listTooLongJoinKeys(program, issues) }
+  }, [outputs, program, request])
+}
+
+/**
  * Returns the warnings of every committed clip (see `deriveVideoWarnings`).
  * @returns {Map<string, Array<{kind: string, params: object}>>} Warnings keyed by video ID.
  */
 export function useVideoWarnings() {
-  const { clips, program } = useVideoTimeline()
+  const { clips } = useVideoTimeline()
+  const { issues } = useTimelineJoinIssues()
   const activityDurationSeconds = useStore((state) => (state.parsedActivity === null ? null : state.activitySummary.durationSeconds))
-  return useMemo(() => deriveVideoWarnings(clips, program, activityDurationSeconds), [activityDurationSeconds, clips, program])
+  return useMemo(() => deriveVideoWarnings(clips, issues, activityDurationSeconds), [activityDurationSeconds, clips, issues])
 }
 
 /**

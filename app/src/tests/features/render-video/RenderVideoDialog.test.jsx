@@ -13,6 +13,7 @@ vi.mock('@/api/backend', async () => ({
   ...(await vi.importActual('@/api/backend')),
   openVideo: vi.fn().mockResolvedValue(undefined),
   openOutputDirectory: vi.fn().mockResolvedValue(undefined),
+  checkJoinability: vi.fn((await import('@/tests/helpers/joinability')).joinsEveryOutput),
 }))
 
 globalThis.ResizeObserver ??= class ResizeObserver {

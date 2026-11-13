@@ -97,10 +97,13 @@ impl Fixture {
         let outputs = sources
             .iter()
             .enumerate()
-            .map(|(index, source)| BatchRenderOutput {
-                id: format!("item-{index}"),
-                pieces: vec![common::builders::whole_source_piece(source, index == 0)],
-                transitions: Vec::new(),
+            .map(|(index, source)| {
+                common::builders::placed_apart(BatchRenderOutput {
+                    id: format!("item-{index}"),
+                    pieces: vec![common::builders::whole_source_piece(source, index == 0)],
+                    transitions: Vec::new(),
+                    placed_segments: Vec::new(),
+                })
             })
             .collect::<Vec<_>>();
         let destination = BatchDestination::SourceNamed {
@@ -799,11 +802,12 @@ fn parts_directories(directory: &std::path::Path) -> Vec<PathBuf> {
 fn combined_request(fixture: &Fixture, names: &[&str], file: &str) -> BatchRenderRequest {
     let mut request = fixture.request(names, true);
     let pieces = vec![piece(&request, 0, 0, 60), piece(&request, 1, 30, 90)];
-    request.outputs = vec![BatchRenderOutput {
+    request.outputs = vec![common::builders::placed_apart(BatchRenderOutput {
         id: "joined".into(),
         pieces,
         transitions: common::builders::hard_cuts(2),
-    }];
+        placed_segments: Vec::new(),
+    })];
     request.destination = BatchDestination::File {
         path: fixture.directory.join(file).to_str().unwrap().into(),
         overwrite: false,
@@ -908,7 +912,7 @@ fn outputs_must_fit_their_destination_and_join_compatible_sources() {
     );
     let incompatible = combined_request(&fixture, &["2-first.mp4", "4-wide.mp4"], "joined.mov");
     assert!(
-        matches!(submit(incompatible), Err(BatchServiceError::InvalidRequest { message }) if message.contains("different display resolution"))
+        matches!(submit(incompatible), Err(BatchServiceError::InvalidRequest { message }) if message.contains("differ in display resolution or frame rate"))
     );
     fs::write(fixture.directory.join("existing.mov"), b"previous output").unwrap();
     // The frontend asks before replacing an existing combined output.
@@ -1109,7 +1113,10 @@ fn transitions_must_fit_their_pieces_and_composite_output() {
     rejected(with(vec![fade(0.01)], 90), "shorter than one frame");
     rejected(with(vec![fade(0.0)], 90), "must be positive");
     // 30 frames before the fade leave no frame of the first piece untouched.
-    rejected(with(vec![fade(1.0)], 30), "leave none of its 30 frames");
+    rejected(
+        with(vec![fade(1.0)], 30),
+        "around piece 1 leave none of its frames",
+    );
     let mut transparent = with(vec![fade(1.0)], 90);
     transparent.encoding = transparent_request.encoding;
     rejected(transparent, "hard cuts only");

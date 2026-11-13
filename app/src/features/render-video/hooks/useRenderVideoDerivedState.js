@@ -9,7 +9,7 @@
  */
 
 import { useCallback, useMemo } from 'react'
-import { deriveCompatibility, getVideosTimelineBounds, joinVideoEdits } from '@/lib/video-program/video-collection'
+import { deriveReferenceFormat, getVideosTimelineBounds, joinVideoEdits } from '@/lib/video-program/video-collection'
 import { OUTPUT_FORMATS_BY_VALUE } from '../data/renderConstants'
 import {
   getAccelerationValueForSettings,
@@ -63,7 +63,7 @@ export default function useRenderVideoDerivedState({ settings }) {
   const hasImportedVideo = importedVideos.length > 0
   // Output modes and the video queue only matter when there is more than one video.
   const hasMultipleVideos = importedVideos.length > 1
-  const videoFormat = useMemo(() => deriveCompatibility(importedVideos).reference, [importedVideos])
+  const videoFormat = useMemo(() => deriveReferenceFormat(importedVideos), [importedVideos])
   const videoBounds = useMemo(() => getVideosTimelineBounds(joinVideoEdits(importedVideos, videoEdits)), [importedVideos, videoEdits])
   const importedVideoFps = videoFormat === null ? null : videoFormat.fps.num / videoFormat.fps.den
   const importedVideoResolution = videoFormat?.resolution ?? null

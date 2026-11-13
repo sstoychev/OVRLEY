@@ -7,9 +7,10 @@
 import { useMemo, useRef, useState } from 'react'
 import { produce } from 'immer'
 import { useTranslation } from 'react-i18next'
-import { formatCombinedExportIssue } from '@/features/render-video'
+import { describeJoinIssues } from '@/features/render-video'
 import { transitionLabel } from '@/features/transitions'
 import { deriveVideoSyncControls } from '@/features/toolbar/utils/videoSyncControls'
+import useJoinability from '@/hooks/useJoinability'
 import { filenameFromSelectedPath } from '@/lib/file-dialog'
 import {
   moveVideoNextTo,
@@ -22,9 +23,10 @@ import {
   applyFilenameCreationTimes,
 } from '@/lib/video-program/collection-edits'
 import { nextImportOrder } from '@/lib/video-program/imported-video'
+import { createProgramJoinabilityRequest, listIssueSourceIds, listSourceOverlaps } from '@/lib/video-program/joinability'
 import { NO_TRANSITION } from '@/lib/video-program/transition-catalog'
 import { formatSecondsClock } from '@/lib/time-format'
-import { deriveCompatibility } from '@/lib/video-program/video-collection'
+import { deriveReferenceFormat } from '@/lib/video-program/video-collection'
 import useStore from '@/store/useStore'
 import { buildImportReview, buildShownCollection, openImportReview, resolveImportSwitches, switchOnWaitingVideo } from '../utils/importReview'
 import { formatVideoDetails } from '../utils/videoFormat'
@@ -125,6 +127,13 @@ export default function useVideoImportReview({ onImported }) {
       ...buildImportReview({ collection: shown, newIds, includedIds, undeterminedIds, unplacedIds, blockedIds, transitionDefaults }),
     }
   }, [review])
+  // The switched-on videos are checked as one file with the project's export mode and codec.
+  const renderSettings = useStore((state) => state.renderSettings)
+  const joinabilityRequest = useMemo(
+    () => (derived === null ? null : createProgramJoinabilityRequest({ clips: derived.includedClips, program: derived.program, renderSettings })),
+    [derived, renderSettings],
+  )
+  const joinability = useJoinability(joinabilityRequest)
 
   const confirm = async () => {
     const current = reviewRef.current
@@ -134,7 +143,7 @@ export default function useVideoImportReview({ onImported }) {
       return
     }
     const reviewed = derived.included
-    const adoptedFormat = current.adoptsFormat ? deriveCompatibility(reviewed.importedVideos).reference : null
+    const adoptedFormat = current.adoptsFormat ? deriveReferenceFormat(reviewed.importedVideos) : null
     setReview({ ...current, phase: 'importing', error: null })
     try {
       const { importedVideos, videoEdits, videoSyncTimezoneMode } = reviewed
@@ -153,8 +162,12 @@ export default function useVideoImportReview({ onImported }) {
     }
   }
 
-  const { rows, windowKind, issues, included, timeline, includedIds, resolution, shown } = derived
+  const { rows, windowKind, included, timeline, includedIds, resolution, shown } = derived
   const clips = review.collection.importedVideos
+  // Until the first answer the rows show no single-file issues.
+  const joinIssues = joinabilityRequest === null || joinability.outputs === null ? [] : joinability.outputs[0].issues
+  const incompatibleIds = listIssueSourceIds(joinIssues, 'incompatible')
+  const nameOf = (videoId) => rows.find((row) => row.id === videoId).filename
   // Switched-off videos are not on the timeline, so a positioned video moves among the switched-on ones.
   const includedRows = rows.filter((row) => row.isIncluded)
   const moveTo = (videoId, index) => {
@@ -186,6 +199,9 @@ export default function useVideoImportReview({ onImported }) {
         const canMove = row.isPositioned && row.isIncluded
         return {
           ...row,
+          isIncompatible: incompatibleIds.has(row.id),
+          // Overlaps among the switched-on videos.
+          overlaps: listSourceOverlaps(joinIssues, row.id).map(({ otherSourceId, seconds }) => ({ name: nameOf(otherSourceId), seconds })),
           formatLabel: formatVideoDetails(row, t),
           onOffsetCommit: (seconds) => editVideo(row.id, setVideoOffset, seconds),
           onOffsetReset: () => editVideo(row.id, resetVideoOffset),
@@ -197,7 +213,7 @@ export default function useVideoImportReview({ onImported }) {
       }),
       failures: review.failures.map(({ path, message }) => ({ key: path, name: filenameFromSelectedPath(path), message })),
       importCount: [...review.newIds].filter((videoId) => includedIds.has(videoId)).length,
-      issues: issues.map((issue) => formatCombinedExportIssue(issue, clips, t)),
+      issues: describeJoinIssues(joinIssues, clips, t),
       farConfirmation:
         review.phase === 'confirming'
           ? {

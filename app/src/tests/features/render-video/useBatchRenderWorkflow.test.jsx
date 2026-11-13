@@ -12,11 +12,12 @@ import { createTestVideo, videoStoreState } from '@/tests/helpers/videoFixtures'
 import batchTemplate from '../../../../../src-tauri/ovrley_core/tests/fixtures/config/batch-template.json'
 import { createVideoEdits } from '@/lib/video-program/imported-video'
 
-vi.mock('@/api/backend', () => ({
+vi.mock('@/api/backend', async () => ({
   createVideoInspection: vi.fn(),
   inspectVideoSource: vi.fn(),
   disposeVideoInspection: vi.fn(),
   planBatchOutputs: vi.fn(),
+  checkJoinability: vi.fn((await import('@/tests/helpers/joinability')).joinsEveryOutput),
   submitBatchRender: vi.fn(),
   subscribeBatchRenderProgress: vi.fn(),
   getBatchRenderSnapshot: vi.fn(),

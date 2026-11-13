@@ -4,19 +4,21 @@ import { DEFAULT_TRANSITION_SETTINGS } from '@/lib/video-program/transition-cata
 import { deriveVideoWarnings } from '@/lib/video-program/video-warnings'
 import { createTestVideo, videoStoreState } from '@/tests/helpers/videoFixtures'
 
-function warningsFor(videos, offsets, activityDurationSeconds = null) {
+function warningsFor(videos, offsets, { joinIssues = [], activityDurationSeconds = null } = {}) {
   const { importedVideos, videoEdits } = videoStoreState(videos, offsets)
-  const { clips, program } = buildTimelineProgram({
+  const { clips } = buildTimelineProgram({
     videos: importedVideos,
     videoEdits,
     dragPreview: null,
     transitionDefaults: DEFAULT_TRANSITION_SETTINGS,
   })
-  return Object.fromEntries(deriveVideoWarnings(clips, program, activityDurationSeconds))
+  return Object.fromEntries(deriveVideoWarnings(clips, joinIssues, activityDurationSeconds))
 }
 
+const overlap = (earlierSourceId, laterSourceId) => ({ kind: 'overlap', earlierSourceId, laterSourceId, startSecond: 0, endSecond: 1 })
+
 describe('deriveVideoWarnings', () => {
-  test('lists incompatible formats, overlaps on both clips, and sync warnings', () => {
+  test('lists the native incompatible formats and overlaps on both clips, and sync warnings', () => {
     const outside = {
       ...createTestVideo({ id: 'outside', path: '/videos/outside.mp4', importOrder: 2 }),
       syncWarning: 'Video is outside the activity',
@@ -28,6 +30,7 @@ describe('deriveVideoWarnings', () => {
         outside,
       ],
       { a: 0, b: 20, outside: 200 },
+      { joinIssues: [overlap('a', 'b'), { kind: 'incompatible', sourceIds: ['b'] }] },
     )
 
     expect(warnings).toEqual({
@@ -48,6 +51,7 @@ describe('deriveVideoWarnings', () => {
         createTestVideo({ id: 'day2', path: '/day2/ride.mp4', durationSeconds: 20, importOrder: 2 }),
       ],
       { long: 0, day1: 10, day2: 40 },
+      { joinIssues: [overlap('long', 'day1'), overlap('long', 'day2')] },
     )
     expect(warnings.long).toEqual([
       { kind: 'overlap', params: { name: 'ride.mp4' } },
@@ -62,7 +66,7 @@ describe('deriveVideoWarnings', () => {
     const offsets = { early: -3601, edgeBefore: -3600, edgeAfter: 1000 + 3600, late: 1000 + 3601, synced: -5000 }
     const videos = [clip('early', 0), clip('edgeBefore', 1), clip('edgeAfter', 2), clip('late', 3), synced]
 
-    expect(warningsFor(videos, offsets, 1000)).toEqual({
+    expect(warningsFor(videos, offsets, { activityDurationSeconds: 1000 })).toEqual({
       early: [far],
       edgeBefore: [],
       edgeAfter: [],
@@ -71,24 +75,5 @@ describe('deriveVideoWarnings', () => {
     })
     // Without an activity there is nothing to be far from.
     expect(warningsFor(videos, offsets).early).toEqual([])
-  })
-
-  test('a video excluded from export does not count as an incompatible format', () => {
-    const { importedVideos, videoEdits } = videoStoreState([
-      createTestVideo({ id: 'a', path: '/videos/a.mp4', durationSeconds: 30 }),
-      createTestVideo({ id: 'b', path: '/videos/b.mp4', durationSeconds: 30, importOrder: 1 }),
-      createTestVideo({ id: 'other', path: '/videos/other.mp4', durationSeconds: 30, fps: { num: 25, den: 1 }, importOrder: 2 }),
-    ])
-    videoEdits.a.offsetSeconds = 0
-    videoEdits.b.offsetSeconds = 100
-    videoEdits.other.offsetSeconds = 200
-    videoEdits.other.segments.start.excluded = true
-    const { clips, program } = buildTimelineProgram({
-      videos: importedVideos,
-      videoEdits,
-      dragPreview: null,
-      transitionDefaults: DEFAULT_TRANSITION_SETTINGS,
-    })
-    expect(deriveVideoWarnings(clips, program, null).get('other')).toEqual([])
   })
 })

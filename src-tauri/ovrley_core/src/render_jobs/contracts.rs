@@ -81,9 +81,19 @@ pub struct BatchTransition {
     pub duration_seconds: f64,
 }
 
+/// Where the editor placed an included segment on its timeline, before overlaps
+/// with other videos are trimmed (seconds `[start_second, end_second)`).
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BatchPlacedSegment {
+    pub source_id: String,
+    pub start_second: f64,
+    pub end_second: f64,
+}
+
 /// One output file assembled from its pieces in order. Pieces of one output share
-/// their display resolution (and composite FPS) so they join without re-encoding
-/// their bodies.
+/// their display resolution and FPS so they join without re-encoding their
+/// bodies (see `joinability`).
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct BatchRenderOutput {
@@ -91,6 +101,9 @@ pub struct BatchRenderOutput {
     pub pieces: Vec<BatchRenderPiece>,
     /// One per join between consecutive pieces. Transparent outputs take hard cuts only.
     pub transitions: Vec<BatchTransition>,
+    /// Every included segment the pieces come from, as placed; overlapping
+    /// placements make the output unjoinable even though its pieces are trimmed.
+    pub placed_segments: Vec<BatchPlacedSegment>,
 }
 
 /// Where the outputs are written.

@@ -10,3 +10,4 @@ mod submission;
 pub mod contracts;
 pub mod execution;
 pub mod inspection;
+pub mod joinability;

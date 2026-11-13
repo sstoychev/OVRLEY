@@ -101,6 +101,7 @@ pub fn run() {
             tauri_commands::backend_list_templates,
             tauri_commands::backend_get_template,
             tauri_commands::backend_open_output_directory,
+            tauri_commands::backend_check_joinability,
             tauri_commands::backend_render_transition_proxy,
             tauri_commands::backend_release_transition_proxy,
             tauri_commands::backend_open_templates,

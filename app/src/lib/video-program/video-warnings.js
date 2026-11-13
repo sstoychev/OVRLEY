@@ -3,9 +3,8 @@
  */
 
 import { filenameFromSelectedPath } from '@/lib/file-dialog'
+import { listIssueSourceIds } from './joinability'
 import { startsOutsideWindow } from './start-window'
-import { deriveCompatibility } from './video-collection'
-import { isVideoExcluded } from './video-segments'
 
 const WARNING_TEXT = {
   incompatible: ['video-preview.warningIncompatible', 'Different resolution or frame rate than the other videos'],
@@ -15,19 +14,20 @@ const WARNING_TEXT = {
 
 /**
  * Collects the warnings of every clip: a format that keeps it out of a combined
- * export, overlaps with other clips, and its synchronization warning (outside the
- * activity, unknown recording time). A clip without a synchronization warning was
- * placed by hand, shifted, or placed next to another clip; it is far when it starts
- * outside the start window around the activity (`VIDEO_START_WINDOW_SECONDS`).
- * A clip excluded from export does not take part in the format comparison.
+ * export and overlaps with other clips (from the native joinability check of the
+ * timeline, see `useTimelineJoinIssues`), and its synchronization warning
+ * (outside the activity, unknown recording time). A clip without a
+ * synchronization warning was placed by hand, shifted, or placed next to another
+ * clip; it is far when it starts outside the start window around the activity
+ * (`VIDEO_START_WINDOW_SECONDS`). A clip excluded from export is not checked.
  * @param {Array<object>} clips Timeline clips (videos joined with their edits).
- * @param {{overlaps: Array<{earlierVideoId: string, laterVideoId: string}>}} program Timeline program of the same clips.
+ * @param {Array<object>} joinIssues Joinability issues of the timeline, naming sources by video ID.
  * @param {number|null} activityDurationSeconds External activity duration, or null without an activity.
  * @returns {Map<string, Array<{kind: 'incompatible'|'overlap'|'sync'|'far', params: object}>>} Warnings keyed by video ID (see
  *   `formatVideoWarning`); every clip has an entry.
  */
-export function deriveVideoWarnings(clips, program, activityDurationSeconds) {
-  const { incompatibleIds } = deriveCompatibility(clips.filter((clip) => !isVideoExcluded(clip)))
+export function deriveVideoWarnings(clips, joinIssues, activityDurationSeconds) {
+  const incompatibleIds = listIssueSourceIds(joinIssues, 'incompatible')
   const names = new Map(clips.map((clip) => [clip.id, filenameFromSelectedPath(clip.path)]))
   const warnings = new Map(clips.map((clip) => [clip.id, []]))
   for (const clip of clips) {
@@ -35,7 +35,7 @@ export function deriveVideoWarnings(clips, program, activityDurationSeconds) {
   }
   // One warning per overlapping pair of videos; two videos may share a filename.
   const warnedPairs = new Set()
-  for (const { earlierVideoId, laterVideoId } of program.overlaps) {
+  for (const { earlierSourceId: earlierVideoId, laterSourceId: laterVideoId } of joinIssues.filter((issue) => issue.kind === 'overlap')) {
     for (const [videoId, otherId] of [
       [earlierVideoId, laterVideoId],
       [laterVideoId, earlierVideoId],

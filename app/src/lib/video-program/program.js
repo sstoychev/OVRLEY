@@ -5,8 +5,9 @@
  * A piece is a continuous source range of one video: a segment that is not
  * excluded from export, inside the export range. Overlapping pieces are resolved
  * for playback: the earlier-starting video plays to its end and the later video
- * continues at the matching source position. Overlaps are still reported so
- * single-file export can be blocked. Excluded segments are listed as well: they
+ * continues at the matching source position. The pieces as placed, before that
+ * trimming, are kept for the native joinability check, which owns whether the
+ * overlap blocks a single file. Excluded segments are listed as well: they
  * stay on the timeline and in the preview, but leave no piece. A separate-file
  * export builds one program per video, so overlaps with other videos do not
  * trim it.
@@ -147,36 +148,25 @@ function buildJoins(pieces, videosById, transitionDefaults) {
  * @param {Array<object>} options.videos Imported videos.
  * @param {{type: 'all'|'custom', from: number, to: number}} options.exportRange Export range in timeline seconds.
  * @param {{type: string, durationSeconds: number, splitGapThresholdSeconds: number}} options.transitionDefaults Project transition defaults.
- * @returns {{pieces: Array<object>, joins: Array<object>, overlaps: Array<object>, excludedSegments: Array<object>, durationSeconds: number}} Program in playback order.
+ * @returns {{pieces: Array<object>, placedPieces: Array<object>, joins: Array<object>, overlaps: Array<object>, excludedSegments: Array<object>,
+ *   durationSeconds: number}} Program in playback order; `placedPieces` are the pieces before overlaps are trimmed, and `overlaps`
+ *   the intervals playback resolves.
  */
 export function buildProgram({ videos, exportRange, transitionDefaults }) {
   const videosById = new Map(videos.map((video) => [video.id, video]))
-  const { pieces, overlaps } = resolveOverlaps(collectPieces(sortVideosByTimeline(videos), exportRange), videosById)
+  const placedPieces = collectPieces(sortVideosByTimeline(videos), exportRange)
+  const { pieces, overlaps } = resolveOverlaps(placedPieces, videosById)
   const joins = buildJoins(pieces, videosById, transitionDefaults)
   const piecesSeconds = pieces.reduce((total, piece) => total + piece.durationSeconds, 0)
   const transitionSeconds = joins.reduce((total, join) => total + join.transition.durationSeconds, 0)
-  return { pieces, joins, overlaps, excludedSegments: collectExcludedSegments(videos), durationSeconds: piecesSeconds - transitionSeconds }
-}
-
-/**
- * Lists pieces whose incoming and outgoing transitions do not leave at least one
- * untouched frame.
- * @param {{pieces: Array<object>, joins: Array<object>}} program Built program.
- * @returns {Array<{pieceId: string, joinKeys: Array<string>}>} Invalid transition placements.
- */
-export function findInvalidTransitions(program) {
-  const issues = []
-  program.pieces.forEach((piece, index) => {
-    const incoming = program.joins[index - 1] ?? null
-    const outgoing = program.joins[index] ?? null
-    if (!leavesUntouchedFrame(piece, incoming?.transition.durationSeconds ?? 0, outgoing?.transition.durationSeconds ?? 0)) {
-      issues.push({
-        pieceId: piece.id,
-        joinKeys: [incoming, outgoing].filter((join) => join && join.transition.durationSeconds > 0).map((join) => join.key),
-      })
-    }
-  })
-  return issues
+  return {
+    pieces,
+    placedPieces,
+    joins,
+    overlaps,
+    excludedSegments: collectExcludedSegments(videos),
+    durationSeconds: piecesSeconds - transitionSeconds,
+  }
 }
 
 /**

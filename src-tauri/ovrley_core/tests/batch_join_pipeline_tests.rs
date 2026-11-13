@@ -257,7 +257,7 @@ fn a_combined_composite_joins_pieces_of_sources_with_and_without_audio() {
             path: target.to_str().unwrap().into(),
             overwrite: false,
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "joined".into(),
             pieces: vec![
                 piece(&first, 15, 60),
@@ -265,7 +265,8 @@ fn a_combined_composite_joins_pieces_of_sources_with_and_without_audio() {
                 piece(&last, 30, 60),
             ],
             transitions: common::builders::hard_cuts(3),
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     let snapshot = workspace.render(request);
     assert_eq!(
@@ -305,12 +306,13 @@ fn joined_outputs_without_any_audio_have_no_audio_track() {
         BatchDestination::SourceNamed {
             directory: workspace.paths.downloads_dir.to_str().unwrap().into(),
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "silent".into(),
             // A deleted part between frames 20 and 40.
             pieces: vec![piece(&silent, 0, 20), piece(&silent, 40, 60)],
             transitions: common::builders::hard_cuts(2),
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     let snapshot = workspace.render(request);
     assert_eq!(
@@ -334,11 +336,12 @@ fn a_separate_transparent_output_joins_its_pieces_as_mov() {
         BatchDestination::SourceNamed {
             directory: workspace.paths.downloads_dir.to_str().unwrap().into(),
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "ride".into(),
             pieces: vec![piece(&source, 0, 30), piece(&source, 60, 90)],
             transitions: common::builders::hard_cuts(2),
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     let snapshot = workspace.render(request);
     assert_eq!(
@@ -365,11 +368,12 @@ fn joined_hevc_keeps_the_apple_compatible_sample_entry() {
         BatchDestination::SourceNamed {
             directory: workspace.paths.downloads_dir.to_str().unwrap().into(),
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "ride".into(),
             pieces: vec![piece(&source, 0, 20), piece(&source, 40, 60)],
             transitions: common::builders::hard_cuts(2),
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     request.encoding.export_codec = "libx265".into();
     let snapshot = workspace.render(request);
@@ -408,7 +412,7 @@ fn transitions_shorten_the_joined_video_and_audio_by_their_durations() {
             path: target.to_str().unwrap().into(),
             overwrite: false,
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "joined".into(),
             pieces: vec![
                 piece(&first, 15, 60),
@@ -416,7 +420,8 @@ fn transitions_shorten_the_joined_video_and_audio_by_their_durations() {
                 piece(&last, 30, 60),
             ],
             transitions: vec![xfade("wipeleft", 0.5), xfade("none", 0.0)],
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     let snapshot = workspace.render(request);
     assert_eq!(
@@ -452,7 +457,7 @@ fn hevc_transitions_at_deleted_parts_encode_with_the_output_encoder() {
         BatchDestination::SourceNamed {
             directory: workspace.paths.downloads_dir.to_str().unwrap().into(),
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "ride".into(),
             // Two deleted parts, bridged by a 15-frame dissolve and a 9-frame fade.
             pieces: vec![
@@ -461,7 +466,8 @@ fn hevc_transitions_at_deleted_parts_encode_with_the_output_encoder() {
                 piece(&source, 80, 90),
             ],
             transitions: vec![xfade("dissolve", 0.5), xfade("fade", 0.3)],
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     request.encoding.export_codec = "libx265".into();
     let snapshot = workspace.render(request);
@@ -590,11 +596,12 @@ fn sources_with_edit_lists_or_late_video_join_with_their_planned_frames() {
                     path: target.to_str().unwrap().into(),
                     overwrite: false,
                 },
-                vec![BatchRenderOutput {
+                vec![common::builders::placed_apart(BatchRenderOutput {
                     id: "joined".into(),
                     pieces: vec![base_piece.clone(), short_piece.clone()],
                     transitions: vec![transition],
-                }],
+                    placed_segments: Vec::new(),
+                })],
             );
             let snapshot = workspace.render(request);
             assert_eq!(
@@ -682,11 +689,12 @@ fn a_source_repeating_a_timestamp_joins_with_its_planned_frames() {
             path: target.to_str().unwrap().into(),
             overwrite: false,
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "joined".into(),
             pieces: vec![base_piece, piece],
             transitions: common::builders::hard_cuts(2),
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     let snapshot = workspace.render(request);
     assert_eq!(
@@ -725,11 +733,12 @@ fn frames_without_activity_coverage_keep_only_raster_widgets() {
         BatchDestination::SourceNamed {
             directory: workspace.paths.downloads_dir.to_str().unwrap().into(),
         },
-        vec![BatchRenderOutput {
+        vec![common::builders::placed_apart(BatchRenderOutput {
             id: "ride".into(),
             pieces: vec![common::builders::whole_source_piece(&source, false)],
             transitions: Vec::new(),
-        }],
+            placed_segments: Vec::new(),
+        })],
     );
     // The 120 s activity ends 1.5 s into the video.
     let BatchActivity::ExternalActivity { offsets, .. } = &mut request.activity else {

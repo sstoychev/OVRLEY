@@ -70,24 +70,22 @@ function sameFormat(left, right) {
 }
 
 /**
- * Groups videos by display resolution and exact frame rate. The largest group is
- * compatible; ties go to the group containing the earliest-imported video.
- * Single-file export requires every video to be compatible.
+ * Returns the format of the videos: the display resolution and exact frame rate
+ * of their largest group, where ties go to the group containing the
+ * earliest-imported video. Whether videos join into one file is decided natively
+ * (see `checkJoinability`).
  * @param {Array<object>} videos Imported videos.
- * @returns {{reference: {resolution: {width: number, height: number}, fps: {num: number, den: number}}|null, incompatibleIds: Set<string>}} Compatibility result.
+ * @returns {{resolution: {width: number, height: number}, fps: {num: number, den: number}}|null} Reference format, or null without videos.
  */
-export function deriveCompatibility(videos) {
+export function deriveReferenceFormat(videos) {
   const groups = []
   for (const video of [...videos].sort((left, right) => left.importOrder - right.importOrder)) {
     const group = groups.find((candidate) => sameFormat(candidate[0], video))
     if (group) group.push(video)
     else groups.push([video])
   }
-  if (groups.length === 0) return { reference: null, incompatibleIds: new Set() }
+  if (groups.length === 0) return null
 
   const reference = groups.reduce((best, group) => (group.length > best.length ? group : best))
-  return {
-    reference: { resolution: { ...reference[0].resolution }, fps: { ...reference[0].fps } },
-    incompatibleIds: new Set(videos.filter((video) => !reference.includes(video)).map((video) => video.id)),
-  }
+  return { resolution: { ...reference[0].resolution }, fps: { ...reference[0].fps } }
 }
